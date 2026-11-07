@@ -55,7 +55,7 @@ func _mossa(eng, s: int, req: Dictionary) -> Dictionary:
 		piano = _pianifica(eng, s, fase == "riserva")
 	while not piano.is_empty():
 		var m: Dictionary = piano.pop_front()
-		var fl := {"r": int(m["r"]), "d": int(m["d"]), "e": int(m["e"])}
+		var fl = {"r": int(m["r"]), "d": int(m["d"]), "e": int(m["e"])}
 		var lib: Dictionary = eng.liberi(int(m["da"]), s)
 		for k in fl:
 			fl[k] = mini(int(fl[k]), int(lib[k]))
@@ -129,7 +129,7 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 			if p["guardiani"]:
 				tenere = lib.duplicate()
 			tenere["d"] = mini(int(lib["d"]), maxi(int(tenere["d"]), 1 if eng.punti_sistema(s) > 0 else 0))
-		var mov := {"r": int(lib["r"]) - int(tenere["r"]), "d": int(lib["d"]) - int(tenere["d"]), "e": int(lib["e"]) - int(tenere["e"])}
+		var mov = {"r": int(lib["r"]) - int(tenere["r"]), "d": int(lib["d"]) - int(tenere["d"]), "e": int(lib["e"]) - int(tenere["e"])}
 		if mov["r"] + mov["d"] + mov["e"] <= 0:
 			continue
 		var meta := _meta(eng, s, h, mov, raggio, mete)
@@ -313,7 +313,7 @@ func _valore_lettera(eng, s: int, r: String, sag: int, sp: int) -> float:
 	if r == "":
 		return 0.0
 	var p: Dictionary = eng.players[s]
-	var l := r.substr(0, 1)
+	var l = r.substr(0, 1)
 	if l in ["A", "B", "C", "D", "E", "F"]:
 		if eng.ignora("fato_AF", s) or eng.ignora("dissoluzione", s) or p["immune"] or p["diss"].has(l):
 			return 0.0
@@ -423,12 +423,12 @@ func _risorse(eng, s: int, rp: int) -> Array:
 		if manca <= 0:
 			continue
 		var disp: int = eng.n_flotte(h, s) - int(stato["usate"].get(h, 0))
-		var tieni := 1 if eng.punti_sistema(s) > 6 else 0
+		var tieni = 1 if eng.punti_sistema(s) > 6 else 0
 		var n := mini(manca, disp - tieni)
 		if n > 0:
 			prova.call({"t": "aumenta", "h": h, "n": n})
 	# 4. costruire flotte
-	var riserva := 6 if not eng.opz.get("gilham", false) else 0
+	var riserva = 6 if not eng.opz.get("gilham", false) else 0
 	var tot: Dictionary = eng.totale_flotte(s)
 	var minacciato := not _minacce(eng, s).is_empty()
 	var porte_ok: Array = eng.porte_di(s).filter(func(h): return int(eng.porte[h]["sp"]) > 0)

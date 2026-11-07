@@ -5,9 +5,9 @@ extends SceneTree
 
 func _init() -> void:
 	var args := OS.get_cmdline_user_args()
-	var scns := [1, 2, 3, 4, 5]
-	var seeds := [1, 2]
-	var varianti := ["originali", "v3", "gilham"]
+	var scns = [1, 2, 3, 4, 5]
+	var seeds = [1, 2]
+	var varianti = ["originali", "v3", "gilham"]
 	if args.size() >= 1:
 		scns = [int(args[0])]
 	if args.size() >= 2:

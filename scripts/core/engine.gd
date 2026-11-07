@@ -57,7 +57,7 @@ var attaccati := {}                # "aut:seat" -> true (13.26)
 var aut: Array = []                # forze autonome [{presente, attiva, custode, cl, colore, porte_pool, flotte_pool}]
 var sag_pool: Array = []           # gettoni saggezza non schierati (9 = "X")
 var sag_centro := {}               # esagono del centro -> gettone
-var esplorati_turno := {}          # seat -> [esagoni su cui ha tirato]
+var esplorati_turno = {}          # seat -> [esagoni su cui ha tirato]
 var x_esplorazione := {}           # seat -> numero di "X" sulla tabella d'esplorazione (non usato nelle tabelle)
 var serie := {}                    # contatori per le vittorie (turni consecutivi)
 var history: Array = []            # istantanee per il replay
@@ -80,7 +80,7 @@ func setup(cfg: Dictionary) -> void:
 	ais.clear()
 	for i in n:
 		var st: Dictionary = seats[i] if i < seats.size() else {"name": "", "ai": true}
-		var p := {"name": str(st.get("name", "")), "ai": bool(st.get("ai", true)), "level": int(st.get("level", 1)),
+		var p = {"name": str(st.get("name", "")), "ai": bool(st.get("ai", true)), "level": int(st.get("level", 1)),
 			"colore": i, "cl": 1, "rp": 0, "cp": 500, "sag": [], "vivo": true, "diss": {}, "immune": false,
 			"k_usato": false, "fazione": "", "esplorati": {}, "porte_iniziali": [], "guardiani": false,
 			"limite_corazzate": false, "x": false}
@@ -169,7 +169,7 @@ func _venti_seme() -> void:
 		var tot := 0
 		for h in hs:
 			var c: int = pv_pool.pop_at(rng.randi_range(0, pv_pool.size() - 1))
-			var v := D.valore_pv(D.GETTONI_PV[c], h)
+			var v = D.valore_pv(D.GETTONI_PV[c], h)
 			pv_pool.append(c)
 			porte[h] = {"o": i, "sp": v, "neut": false, "nata": 0, "aum": 0, "orig": i}
 			p["porte_iniziali"].append(h)
@@ -721,7 +721,7 @@ func _spostamenti_giocatore(s: int, riserva: bool) -> void:
 		var r = await decide(s, req)
 		if r == null or not (r is Dictionary) or r.get("fine", false):
 			return
-		var ok := await _esegui_mossa(s, r, riserva)
+		var ok = await _esegui_mossa(s, r, riserva)
 		if ok:
 			fatti += 1
 
@@ -759,7 +759,7 @@ func mod_dispersione(o: int, a: int, fl: Dictionary) -> int:
 	if faro(a):
 		m += 1
 	var e := int(fl.get("e", 0))
-	var tot := int(fl.get("r", 0)) + int(fl.get("d", 0)) + e
+	var tot = int(fl.get("r", 0)) + int(fl.get("d", 0)) + e
 	if e > 0 and e == tot:
 		m += 2
 	elif e > 0:
@@ -802,7 +802,7 @@ func rischio(o: int, da: int, a: int, fl: Dictionary) -> Dictionary:
 func _esegui_mossa(s: int, r: Dictionary, riserva: bool) -> bool:
 	var da := int(r.get("da", 0))
 	var a := int(r.get("a", 0))
-	var fl := {"r": int(r.get("r", 0)), "d": int(r.get("d", 0)), "e": int(r.get("e", 0))}
+	var fl = {"r": int(r.get("r", 0)), "d": int(r.get("d", 0)), "e": int(r.get("e", 0))}
 	var err := mossa_valida(s, da, a, fl, riserva)
 	if err != "":
 		log_msg("Spostamento rifiutato: " + err, s)
@@ -827,7 +827,7 @@ func _esegui_mossa(s: int, r: Dictionary, riserva: bool) -> bool:
 	var forza := fl
 	var primo := true
 	while true:
-		var esito := await _salto(s, pos, dest, forza, carico)
+		var esito = await _salto(s, pos, dest, forza, carico)
 		if esito["perso"]:
 			return true
 		pos = int(esito["h"])
@@ -865,7 +865,7 @@ func _salto(o: int, da: int, a: int, forza: Dictionary, carico: Array) -> Dictio
 	var autonomo := o >= 10
 	var gil: bool = opz.get("gilham", false) and not autonomo
 	var esito := {"ok": true, "perso": false, "h": a, "forza": forza, "oltre": oltre}
-	var desc := "%s: %d flotte da %s a %s (%d esagoni)" % [fazione(o), _n(forza), D.nome(da), D.nome(a), dist]
+	var desc = "%s: %d flotte da %s a %s (%d esagoni)" % [fazione(o), _n(forza), D.nome(da), D.nome(a), dist]
 	if dist >= 2:
 		var m := mod_dispersione(o, a, forza)
 		var d := dado()
@@ -949,7 +949,7 @@ func _n(fl: Dictionary) -> int:
 ## Toglie n flotte da una forza secondo la preferenza: prima regolari, poi esploratrici, poi corazzate.
 func _perdi(fl: Dictionary, n: int, o: int) -> Dictionary:
 	var out := fl.duplicate()
-	var ordine_perdite := ["r", "e", "d"]
+	var ordine_perdite = ["r", "e", "d"]
 	if o >= 0 and o < 10 and players[o].get("perdite", "") == "esploratrici":
 		ordine_perdite = ["e", "r", "d"]
 	for k in ordine_perdite:
@@ -1062,7 +1062,7 @@ func _muovi_autonomi() -> void:
 				if best > 0:
 					var fl: Dictionary = liberi(h, o)
 					_togli(h, o, fl)
-					var e := await _salto(o, h, best, fl, [])
+					var e = await _salto(o, h, best, fl, [])
 					if not e["perso"]:
 						_aggiungi(int(e["h"]), o, e["forza"], true)
 			var occupate := []
@@ -1079,7 +1079,7 @@ func _muovi_autonomi() -> void:
 					if _n(fl2) > 0:
 						var t: int = occupate[rng.randi_range(0, occupate.size() - 1)]
 						_togli(h, o, fl2)
-						var e2 := await _salto(o, h, t, fl2, [])
+						var e2 = await _salto(o, h, t, fl2, [])
 						if not e2["perso"]:
 							_aggiungi(int(e2["h"]), o, e2["forza"], true)
 			continue
@@ -1131,7 +1131,7 @@ func _muovi_autonomi() -> void:
 			da_prendere -= _n(preso)
 		if _n(forza) <= 0:
 			continue
-		var e3 := await _salto(o, origine, bersaglio, forza, [])
+		var e3 = await _salto(o, origine, bersaglio, forza, [])
 		if not e3["perso"]:
 			_aggiungi(int(e3["h"]), o, e3["forza"], true)
 
@@ -1183,7 +1183,7 @@ func _fase_esplorazione() -> void:
 				continue
 			esplorati_turno[s].append(h)
 			var st := stack(h, s)
-			var n := 2 * int(st["e"]) + int(st["r"]) + int(st["d"])
+			var n = 2 * int(st["e"]) + int(st["r"]) + int(st["d"])
 			var col := D.col_esplorazione(n)
 			var d := dado()
 			if d <= col + 1:
@@ -1463,7 +1463,7 @@ func _segmento_interazione() -> void:
 			if o < 10:
 				continue
 			var A: Dictionary = aut[o - 10]
-			var k := "%d:%d" % [o, s]
+			var k = "%d:%d" % [o, s]
 			if A["custode"] < 0:
 				A["custode"] = s
 				log_msg("%s diventa custode della forza autonoma %s." % [fazione(s), D.COLORI_AUT[o - 10]])
@@ -1748,7 +1748,7 @@ func _segmento_riduzione() -> void:
 		for o in tentano:
 			if porta(h).is_empty() or porta(h)["neut"]:
 				break
-			var diff := _cap_rid(h, o) - (int(g["sp"]) + cl(prop))
+			var diff = _cap_rid(h, o) - (int(g["sp"]) + cl(prop))
 			var col := D.col_riduzione(diff)
 			var dd := dado()
 			if col >= 0:
@@ -1860,7 +1860,7 @@ func _fato_giocatore(s: int) -> void:
 	var sp := punti_sistema(s)
 	var gil: bool = opz.get("gilham", false)
 	var col0 := D.col_fato_gilham(sp) if gil else D.col_fato(sp)
-	var req := {"type": "fato", "sp": sp, "rp": int(p["rp"]), "sag": p["sag"].size(), "colonna": col0, "gilham": gil}
+	var req = {"type": "fato", "sp": sp, "rp": int(p["rp"]), "sag": p["sag"].size(), "colonna": col0, "gilham": gil}
 	var r = await decide(s, req)
 	var piu := 0
 	var sx := 0
@@ -1891,12 +1891,12 @@ func _fato_giocatore(s: int) -> void:
 		sag_pool.append(c)
 	var col := maxi(0, col0 - sx)
 	var d := dado()
-	var tiro := d + mini(int(x_esplorazione.get(s, 0)), 6 - d)
+	var tiro = d + mini(int(x_esplorazione.get(s, 0)), 6 - d)
 	tiro = mini(tiro + piu, 8)
 	var tab := tabella_fato()
 	tiro = mini(tiro, tab.size())
 	var ris: String = tab[tiro - 1][col]
-	var testo := "Fato di %s: punti sistema %d, colonna %d, dado %d%s = %d" % [fazione(s), sp, col + 1, d, (" +%d" % piu) if piu > 0 else "", tiro]
+	var testo = "Fato di %s: punti sistema %d, colonna %d, dado %d%s = %d" % [fazione(s), sp, col + 1, d, (" +%d" % piu) if piu > 0 else "", tiro]
 	if spesi > 0:
 		testo += ", %d gettoni saggezza spesi" % spesi
 	if ris == "":
@@ -2099,7 +2099,7 @@ func _comparsa_autonomi(s: int, lettera: String) -> void:
 
 
 func _posti_autonomi(h: int, n: int) -> Array:
-	var out := [h]
+	var out = [h]
 	if porte.has(h):
 		return []
 	for dir in range(1, 7):
@@ -2306,7 +2306,7 @@ func azione_valida(s: int, a: Dictionary, stato: Dictionary) -> String:
 			if k == "d" and p["x"] and str(sc.get("x_regola", "")) == "4":
 				return "chi ha il gettone X non costruisce corazzate"
 			if k == "d" and p["limite_corazzate"]:
-				var tot := int(totale_flotte(s)["d"]) + int(stato["corazzate"]) + n2
+				var tot = int(totale_flotte(s)["d"]) + int(stato["corazzate"]) + n2
 				if tot > punti_sistema(s) / 10:
 					return "al massimo una corazzata ogni dieci punti sistema"
 		"ricerca":
@@ -2508,7 +2508,7 @@ func _vittoria() -> void:
 				else:
 					_fine({"winner": -1, "reason": "la PSL resta al livello di civiltà %d: sconfitta" % cl(0), "perso": 0})
 		4:
-			var punti := [814, 1118, 1212, 1215, 1314]
+			var punti = [814, 1118, 1212, 1215, 1314]
 			for s in vivi():
 				var q := 0
 				for h in punti:

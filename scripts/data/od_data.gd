@@ -95,7 +95,7 @@ static func distanza(a: int, b: int) -> int:
 const DIR_CUBO := [Vector3i(0, 1, -1), Vector3i(1, 0, -1), Vector3i(1, -1, 0), Vector3i(0, -1, 1), Vector3i(-1, 0, 1), Vector3i(-1, 1, 0)]
 
 static func passo(h: int, dir: int, n := 1) -> int:
-	var c := cubo(h) + DIR_CUBO[dir - 1] * n
+	var c = cubo(h) + DIR_CUBO[dir - 1] * n
 	return da_cubo(c)
 
 
@@ -538,6 +538,6 @@ const NOMI_SEME := ["Popolo dei Venti Seme", "Figli della Polvere", "Erranti di 
 static func flotte_da_testo(t: String) -> Dictionary:
 	var out := {"r": 0, "d": 0, "e": 0}
 	for p in t.split(" ", false):
-		var k := p.substr(p.length() - 1)
+		var k = p.substr(p.length() - 1)
 		out[k] = out.get(k, 0) + int(p.substr(0, p.length() - 1))
 	return out
