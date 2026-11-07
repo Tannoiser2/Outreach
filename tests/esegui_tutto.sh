@@ -7,6 +7,11 @@ echo "== controllo degli script"
 timeout 120 $G --headless --path . -s tests/compila.gd 2>&1 | grep -v "^Godot Engine" | head -60
 echo "== partite automatiche"
 timeout 1200 $G --headless --path . -s tests/autoplay.gd 2>&1 | grep -v "^Godot Engine" | tail -60
+echo "== eventi in una partita a quattro (scenario 4, 40 turni)"
+DUMP=1 MAXT=40 timeout 300 $G --headless --path . -s tests/autoplay.gd -- 4 3 originali 2>&1 > /tmp/dump.txt
+for k in "CONTATTO" "attacca" "neutralizzata" "DISPERSIONE" "dispersione di" "Fato di" "forza autonoma" "sceglie C" "sceglie A" "stelle faro" "gettone saggezza" "livello di civiltà" "è eliminato" "Ordine"; do echo "$k: $(grep -c "$k" /tmp/dump.txt)"; done
+grep "SCN" /tmp/dump.txt
+grep -E "attacca|neutralizzata|CONTATTO" /tmp/dump.txt | head -12
 if [ -f tests/salva_carica.gd ]; then
   echo "== salvataggio e ricarica"
   timeout 300 $G --headless --path . -s tests/salva_carica.gd 2>&1 | grep -v "^Godot Engine" | tail -20

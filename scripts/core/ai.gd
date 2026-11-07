@@ -139,6 +139,36 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 	return out
 
 
+static var _bordo_nucleo: Array = []
+
+## Bonus per gli esagoni che contano per la vittoria dello scenario.
+func _obiettivo(eng, s: int, x: int) -> float:
+	match int(eng.scn_id):
+		1:
+			if x == 1816:
+				return 7.0
+			var altro: int = 1 - s
+			if x in eng.players[altro]["porte_iniziali"] and int(eng.totale_flotte(s)["d"]) >= 3:
+				return 3.0
+		2:
+			if s > 0:
+				if _bordo_nucleo.is_empty():
+					for h in D.mappa()["esagoni"]:
+						if not D.nucleo(h):
+							for v in D.vicini(h):
+								if D.nucleo(v):
+									_bordo_nucleo.append(h)
+									break
+				var dmin := 99
+				for b in _bordo_nucleo:
+					dmin = mini(dmin, D.distanza(b, x))
+				return maxf(0.0, 8.0 - dmin) * 0.5
+		4:
+			if x in [814, 1118, 1212, 1215, 1314] and not eng.porta_propria(x, s):
+				return 4.0
+	return 0.0
+
+
 func _minacce(eng, s: int) -> Array:
 	var out := []
 	for g in eng.porte_di(s):
@@ -201,6 +231,7 @@ func _meta(eng, s: int, h: int, fl: Dictionary, raggio: int, mete: Dictionary) -
 			v -= int(ri["rischio"]) * 1.5
 			if mete.has(x):
 				v -= 3.0
+			v += _obiettivo(eng, s, x)
 			# nemici: evitare le pile ostili più forti
 			for o in eng.proprietari(x):
 				if o != s:
@@ -427,12 +458,14 @@ func _risorse(eng, s: int, rp: int) -> Array:
 		var n := mini(manca, disp - tieni)
 		if n > 0:
 			prova.call({"t": "aumenta", "h": h, "n": n})
-	# 4. costruire flotte
-	var riserva = 6 if not eng.opz.get("gilham", false) else 0
+	# 4. costruire flotte: prima regolari dove la porta ha ancora margine (le si spende il turno dopo
+	# per aumentarla: è il modo più rapido di far crescere i punti sistema), poi esploratrici,
+	# corazzate se c'è una minaccia, regolari per espandersi.
+	var riserva = 4 if not eng.opz.get("gilham", false) else 0
 	var tot: Dictionary = eng.totale_flotte(s)
 	var minacciato = not _minacce(eng, s).is_empty()
 	var porte_ok: Array = eng.porte_di(s).filter(func(h): return int(eng.porte[h]["sp"]) > 0)
-	porte_ok.sort_custom(func(a, b): return int(eng.porte[a]["sp"]) > int(eng.porte[b]["sp"]))
+	porte_ok.sort_custom(func(a, b): return eng.potenziale(a) - int(eng.porte[a]["sp"]) > eng.potenziale(b) - int(eng.porte[b]["sp"]))
 	var giri := 0
 	while int(stato["rp"]) > riserva and giri < 40:
 		giri += 1
@@ -440,18 +473,20 @@ func _risorse(eng, s: int, rp: int) -> Array:
 		for h in porte_ok:
 			if int(stato["rp"]) <= riserva:
 				break
-			var tipo := "r"
+			var margine: int = eng.potenziale(h) - int(eng.porte[h]["sp"]) - eng.n_flotte(h, s)
 			var t = D.terreno(h)
-			if t == "A" and int(tot["e"]) < 2 + eng.punti_sistema(s) / 15 and not p["guardiani"]:
-				tipo = "e"
-			elif (t == "A" or t == "F") and (minacciato or p["guardiani"] or (int(tot["d"]) * 4 < int(tot["r"]) and int(stato["rp"]) >= 16)):
-				tipo = "d"
-			var a = {"t": "flotta", "h": h, "k": tipo, "n": 1}
-			if int(stato["rp"]) - D.COSTO[tipo] < riserva - 3:
-				a["k"] = "r"
-			if prova.call(a):
-				fatto = true
-				tot[a["k"]] += 1
+			var tipi := ["r"]
+			if margine <= 0:
+				if t == "A" and int(tot["e"]) < 2 + eng.punti_sistema(s) / 12 and not p["guardiani"]:
+					tipi = ["e", "r"]
+				elif (t == "A" or t == "F") and (minacciato or p["guardiani"] or (int(tot["d"]) * 4 < int(tot["r"]) and int(stato["rp"]) >= 16)):
+					tipi = ["d", "r"]
+			for tipo in tipi:
+				var a = {"t": "flotta", "h": h, "k": tipo, "n": 1}
+				if prova.call(a):
+					fatto = true
+					tot[tipo] += 1
+					break
 		if not fatto:
 			break
 	if eng.opz.get("gilham", false) and int(stato["rp"]) > 20:
