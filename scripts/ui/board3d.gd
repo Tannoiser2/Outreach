@@ -252,7 +252,11 @@ func _process(d: float) -> void:
 	if _sel_mesh != null:
 		_sel_mesh.rotation.y += d * 1.5
 		_sel_mesh.scale = Vector3.ONE * (1.0 + 0.06 * sin(t * 5.0))
+	_aggiorna_fili(d)
+	_pulsa_fari()
 	for c in effetti.get_children():
+		if c.has_meta("filo"):
+			continue
 		if c.has_meta("vita"):
 			var v: float = c.get_meta("vita") - d
 			c.set_meta("vita", v)
@@ -438,20 +442,7 @@ func aggiorna() -> void:
 	for h in eng.sag_centro:
 		pedine.add_child(_gettone("saggezza", pos(h) + Vector3(0.4, 0.02, 0.4), 0.5, Color(0.3, 0.3, 0.3)))
 	for h in eng.fari:
-		var f := MeshInstance3D.new()
-		var sm := SphereMesh.new()
-		sm.radius = 0.09
-		sm.height = 0.18
-		var mf := StandardMaterial3D.new()
-		mf.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mf.albedo_color = Color(1, 0.75, 0.55) if D.faro_stampato(h) != "" else Color(0.8, 0.9, 1.0)
-		mf.emission_enabled = true
-		mf.emission = mf.albedo_color
-		mf.emission_energy_multiplier = 3.0
-		sm.material = mf
-		f.mesh = sm
-		f.position = pos(h) + Vector3(0, 0.06, 0.25)
-		pedine.add_child(f)
+		pedine.add_child(_stella_faro(h))
 	for h in eng.pv:
 		if eng.porte.has(h):
 			continue
@@ -508,24 +499,15 @@ func set_evidenziati(b: Dictionary, sel: int) -> void:
 func effetto(kind: String, data: Dictionary) -> void:
 	match kind:
 		"salto", "disperso":
-			var s := MeshInstance3D.new()
-			var sm := SphereMesh.new()
-			sm.radius = 0.22
-			sm.height = 0.44
-			var m := StandardMaterial3D.new()
-			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			var col = Grafica.tinta(int(data["o"])) if kind == "salto" else UI.ROSSO
-			m.albedo_color = col
-			m.emission_enabled = true
-			m.emission = col
-			m.emission_energy_multiplier = 4.0
-			sm.material = m
-			s.mesh = sm
-			s.set_meta("vita", 1.2)
-			s.set_meta("durata", 1.2)
-			s.set_meta("da", pos(int(data["da"])) + Vector3(0, 0.5, 0))
-			s.set_meta("a", pos(int(data.get("h", data["a"]))) + Vector3(0, 0.5, 0))
-			effetti.add_child(s)
+			var da := int(data["da"])
+			var a := int(data["a"])
+			var fine := int(data.get("h", a))
+			var col = Grafica.tinta(int(data["o"])) if int(data["o"]) >= 0 else Color.WHITE
+			if kind == "salto":
+				_filo(pos(da), pos(a), col, false)
+			else:
+				# il filo punta alla destinazione voluta, poi si spezza e finisce dove la forza è dispersa
+				_filo(pos(da), pos(a), col, true, pos(fine))
 		"attacco", "neutralizza", "contatto", "esplora", "porta", "autonomi":
 			var col2: Color = {"attacco": Color(1, 0.45, 0.15), "neutralizza": Color(0.7, 0.8, 1.0), "contatto": UI.AMBRA, "esplora": Color(0.5, 0.9, 1.0)}.get(kind, Color(1, 1, 1))
 			if data.has("o"):
@@ -533,3 +515,213 @@ func effetto(kind: String, data: Dictionary) -> void:
 			var a = _anello(pos(int(data["h"])), col2, 0.4, 0.6)
 			a.set_meta("vita", 1.0)
 			effetti.add_child(a)
+
+
+# ---------------------------------------------------------------- balzi: fili d'argento
+
+const DURATA_VOLO := 1.3
+const DURATA_CODA := 0.9
+var _fili: Array = []
+var _mat_filo: StandardMaterial3D
+
+
+func _materiale_filo() -> StandardMaterial3D:
+	if _mat_filo == null:
+		_mat_filo = StandardMaterial3D.new()
+		_mat_filo.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_mat_filo.vertex_color_use_as_albedo = true
+		_mat_filo.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mat_filo.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		_mat_filo.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_mat_filo.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+		_mat_filo.render_priority = 3
+	return _mat_filo
+
+
+## Un balzo: una parabola d'argento da a verso b. La testa corre lungo l'arco, la coda svanisce
+## mano a mano. Se disperso, alla fine l'arco devia verso l'esagono in cui la forza è finita.
+func _filo(a: Vector3, b: Vector3, tinta: Color, disperso := false, fine := Vector3.ZERO) -> void:
+	var punti := []
+	var lun = a.distance_to(b)
+	var alt := clampf(1.2 + lun * 0.28, 1.4, 9.0)
+	var n := 48
+	for i in n + 1:
+		var k = float(i) / n
+		punti.append(a.lerp(b, k) + Vector3(0, 0.35 + sin(k * PI) * alt, 0))
+	if disperso:
+		var c = b + Vector3(0, 0.35, 0)
+		var f = fine + Vector3(0, 0.35, 0)
+		for i in range(1, 13):
+			var k2 = float(i) / 12
+			punti.append(c.lerp(f, k2) + Vector3(0, sin(k2 * PI) * 0.8, 0))
+	var mi := MeshInstance3D.new()
+	mi.mesh = ImmediateMesh.new()
+	mi.set_meta("filo", true)
+	effetti.add_child(mi)
+	var testa := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.13
+	sm.height = 0.26
+	sm.radial_segments = 8
+	sm.rings = 4
+	var mt := StandardMaterial3D.new()
+	mt.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mt.albedo_color = Color(1, 1, 1)
+	mt.emission_enabled = true
+	mt.emission = Color(0.95, 0.97, 1.0)
+	mt.emission_energy_multiplier = 5.0
+	sm.material = mt
+	testa.mesh = sm
+	testa.set_meta("filo", true)
+	effetti.add_child(testa)
+	# argento con un riflesso del colore del giocatore (rosso se disperso)
+	var argento := Color(0.82, 0.86, 0.95).lerp(tinta, 0.25)
+	_fili.append({"mesh": mi, "testa": testa, "punti": punti, "t": 0.0, "col": argento, "disperso": disperso, "n_arco": n})
+
+
+func _aggiorna_fili(d: float) -> void:
+	if _fili.is_empty():
+		return
+	var vista = cam.global_position
+	for f in _fili.duplicate():
+		f["t"] = float(f["t"]) + d
+		var t3: float = f["t"]
+		var punti: Array = f["punti"]
+		var tot = punti.size() - 1
+		var testa_k := clampf(t3 / DURATA_VOLO, 0.0, 1.0)
+		var testa_i = testa_k * tot
+		var svanisce = maxf(0.0, t3 - DURATA_VOLO) / DURATA_CODA
+		if svanisce >= 1.0:
+			f["mesh"].queue_free()
+			f["testa"].queue_free()
+			_fili.erase(f)
+			continue
+		# coda: dal punto più vecchio ancora visibile alla testa; si accorcia e sbiadisce
+		var lung_coda = tot * 0.55
+		var coda_i := maxf(0.0, testa_i - lung_coda + svanisce * lung_coda)
+		if svanisce > 0:
+			coda_i = minf(testa_i, tot * svanisce)
+		var im: ImmediateMesh = f["mesh"].mesh
+		im.clear_surfaces()
+		var i0 := int(floor(coda_i))
+		var i1 := int(ceil(testa_i))
+		if i1 - i0 >= 1:
+			im.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP, _materiale_filo())
+			for i in range(i0, i1 + 1):
+				var p: Vector3 = punti[clampi(i, 0, tot)]
+				var q: Vector3 = punti[clampi(i + 1, 0, tot)] if i < tot else punti[tot] + (punti[tot] - punti[tot - 1])
+				var tang = (q - p).normalized()
+				var verso = (vista - p).normalized()
+				var lato = tang.cross(verso).normalized()
+				# 0 in coda, 1 in testa
+				var u = (float(i) - coda_i) / maxf(0.001, testa_i - coda_i)
+				u = clampf(u, 0.0, 1.0)
+				var alfa = u * u * (1.0 - svanisce)
+				var col: Color = f["col"]
+				if f["disperso"] and i > int(f["n_arco"]):
+					col = Color(1.0, 0.35, 0.25)
+				var largo = 0.03 + 0.07 * u
+				im.surface_set_color(Color(col, alfa))
+				im.surface_add_vertex(p + lato * largo)
+				im.surface_set_color(Color(col, alfa))
+				im.surface_add_vertex(p - lato * largo)
+			im.surface_end()
+		var hp: Vector3 = punti[clampi(int(round(testa_i)), 0, tot)]
+		f["testa"].position = hp
+		f["testa"].visible = svanisce < 0.3
+		f["testa"].scale = Vector3.ONE * (1.0 + 0.25 * sin(t3 * 18.0))
+
+
+# ---------------------------------------------------------------- stelle faro in 3D
+
+static var _tex_stella: ImageTexture
+var _fari_nodi: Array = []
+
+
+static func _texture_stella() -> ImageTexture:
+	if _tex_stella != null:
+		return _tex_stella
+	var n := 128
+	var img = Image.create(n, n, false, Image.FORMAT_RGBA8)
+	var c = n / 2.0
+	for y in n:
+		for x in n:
+			var dx = (x - c + 0.5) / c
+			var dy = (y - c + 0.5) / c
+			var r := sqrt(dx * dx + dy * dy)
+			# nucleo, alone e quattro raggi sottili
+			var nucleo = exp(-r * r * 60.0)
+			var alone = exp(-r * r * 6.0) * 0.45
+			var raggi = (exp(-absf(dx) * 40.0) * exp(-absf(dy) * 2.2) + exp(-absf(dy) * 40.0) * exp(-absf(dx) * 2.2)) * 0.8
+			var v := clampf(nucleo + alone + raggi, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1, 1, 1, v))
+	_tex_stella = ImageTexture.create_from_image(img)
+	return _tex_stella
+
+
+func _stella_faro(h: int) -> Node3D:
+	var n := Node3D.new()
+	var stampata = D.faro_stampato(h) != ""
+	var col := Color(1.0, 0.72, 0.5) if stampata else Color(0.7, 0.85, 1.0)
+	n.position = pos(h) + Vector3(0, 0.75, 0.25)
+	# il corpo: una piccola sfera incandescente
+	var core := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.11
+	sm.height = 0.22
+	var mc := StandardMaterial3D.new()
+	mc.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mc.albedo_color = Color(1, 1, 1)
+	mc.emission_enabled = true
+	mc.emission = col
+	mc.emission_energy_multiplier = 6.0
+	sm.material = mc
+	core.mesh = sm
+	n.add_child(core)
+	# i raggi: due stelle a croce rivolte alla telecamera, una ruota piano, l'altra pulsa
+	for k in 2:
+		var q := MeshInstance3D.new()
+		var qm := QuadMesh.new()
+		qm.size = Vector2(1.6, 1.6) if k == 0 else Vector2(1.1, 1.1)
+		var mq := StandardMaterial3D.new()
+		mq.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mq.albedo_texture = _texture_stella()
+		mq.albedo_color = col if k == 0 else Color(1, 1, 1, 0.8)
+		mq.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mq.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		mq.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mq.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+		mq.render_priority = 4
+		qm.material = mq
+		q.mesh = qm
+		q.set_meta("fase", float((h * 37) % 100) / 100.0 * TAU)
+		q.set_meta("tipo", k)
+		n.add_child(q)
+	_fari_nodi.append(n)
+	return n
+
+
+func _pulsa_fari() -> void:
+	var vivi := []
+	for n in _fari_nodi:
+		if not is_instance_valid(n) or n.is_queued_for_deletion():
+			continue
+		vivi.append(n)
+		for q in n.get_children():
+			if not q.has_meta("fase"):
+				continue
+			var fase: float = q.get_meta("fase")
+			var ang := 0.0
+			var sc := 1.0
+			if int(q.get_meta("tipo")) == 0:
+				ang = t * 0.35 + fase
+				sc = 0.85 + 0.2 * sin(t * 1.7 + fase)
+			else:
+				ang = -t * 0.6 + fase + PI / 4.0
+				sc = 0.6 + 0.45 * pow(0.5 + 0.5 * sin(t * 2.6 + fase), 3.0)
+			# rivolta alla telecamera e ruotata attorno alla linea di vista
+			var dir: Vector3 = (cam.global_position - n.global_position).normalized()
+			var b = Basis.looking_at(-dir, cam.global_transform.basis.y)
+			b = b.rotated(dir, ang)
+			q.global_transform = Transform3D(b.scaled(Vector3.ONE * sc), n.global_position)
+	_fari_nodi = vivi

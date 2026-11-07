@@ -154,9 +154,9 @@ func _process(d: float) -> void:
 	t += d
 	var cambia := false
 	for l in linee:
-		l["t"] -= d
+		l["t"] += d
 		cambia = true
-	linee = linee.filter(func(x): return x["t"] > 0)
+	linee = linee.filter(func(x): return x["t"] < VOLO + CODA)
 	for l in lampi:
 		l["t"] -= d
 		cambia = true
@@ -168,9 +168,9 @@ func _process(d: float) -> void:
 func effetto(kind: String, data: Dictionary) -> void:
 	match kind:
 		"salto":
-			linee.append({"da": int(data["da"]), "a": int(data["a"]), "col": Grafica.tinta(int(data["o"])), "t": 1.4})
+			linee.append({"da": int(data["da"]), "a": int(data["a"]), "col": Grafica.tinta(int(data["o"])), "t": 0.0, "fine": -1})
 		"disperso":
-			linee.append({"da": int(data["da"]), "a": int(data["a"]), "col": UI.ROSSO, "t": 1.6})
+			linee.append({"da": int(data["da"]), "a": int(data["a"]), "col": Grafica.tinta(int(data["o"])), "t": 0.0, "fine": int(data.get("h", -1))})
 			lampi.append({"h": int(data["h"]), "col": UI.ROSSO, "t": 1.2, "r": 1.0})
 		"attacco":
 			lampi.append({"h": int(data["h"]), "col": Color(1, 0.4, 0.2), "t": 1.0, "r": 1.3})
@@ -293,12 +293,7 @@ func _draw() -> void:
 			draw_string(font, p6, "C", HORIZONTAL_ALIGNMENT_CENTER, s6, int(s6), UI.AMBRA)
 	# effetti
 	for l in linee:
-		var a = px(int(l["da"]))
-		var b = px(int(l["a"]))
-		var c: Color = l["col"]
-		c.a = clampf(float(l["t"]), 0.0, 1.0)
-		draw_line(a, b, c, 3.0, true)
-		draw_circle(b, r * 0.15, c)
+		_disegna_filo(l, r)
 	for l in lampi:
 		var c2: Color = l["col"]
 		var k := float(l["t"])
@@ -345,3 +340,42 @@ func _esagono(c: Vector2, r: float, col: Color, w: float) -> void:
 		var a := deg_to_rad(60.0 * i)
 		pts.append(c + Vector2(cos(a), sin(a)) * r)
 	draw_polyline(pts, col, w, true)
+
+
+const VOLO := 1.3
+const CODA := 0.9
+
+## Balzo: arco d'argento che si alza sulla mappa, testa luminosa e coda che svanisce.
+func _disegna_filo(l: Dictionary, r: float) -> void:
+	var a = px(int(l["da"]))
+	var b = px(int(l["a"]))
+	var punti := PackedVector2Array()
+	var n := 40
+	var lun = a.distance_to(b)
+	var alza := clampf(lun * 0.35, r * 0.8, r * 12.0)
+	for i in n + 1:
+		var k = float(i) / n
+		punti.append(a.lerp(b, k) + Vector2(0, -sin(k * PI) * alza))
+	var n_arco = n
+	if int(l["fine"]) > 0:
+		var f = px(int(l["fine"]))
+		for i in range(1, 11):
+			var k2 = float(i) / 10
+			punti.append(b.lerp(f, k2) + Vector2(0, -sin(k2 * PI) * r * 0.6))
+	var tot = punti.size() - 1
+	var t3: float = l["t"]
+	var testa = clampf(t3 / VOLO, 0.0, 1.0) * tot
+	var sv = maxf(0.0, t3 - VOLO) / CODA
+	var coda := maxf(0.0, testa - tot * 0.55)
+	if sv > 0:
+		coda = minf(testa, tot * sv)
+	var argento := Color(0.84, 0.88, 0.97).lerp(l["col"], 0.25)
+	for i in range(int(coda), int(ceil(testa))):
+		var u := clampf((float(i) - coda) / maxf(0.001, testa - coda), 0.0, 1.0)
+		var c = argento if i < n_arco else Color(1.0, 0.35, 0.25)
+		c.a = u * u * (1.0 - sv)
+		draw_line(punti[i], punti[mini(i + 1, tot)], c, 1.0 + 3.0 * u, true)
+	if sv < 0.3:
+		var hp = punti[clampi(int(round(testa)), 0, tot)]
+		draw_circle(hp, r * 0.16, Color(1, 1, 1, 0.35))
+		draw_circle(hp, r * 0.08, Color(1, 1, 1, 0.95))

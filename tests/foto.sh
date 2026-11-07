@@ -12,5 +12,6 @@ f risultati/07_plancia.png 4 originale 2d 15 plancia
 f risultati/08_regole.png regole
 f risultati/09_3d_senza_mappa.png 4 originale 3d 8 senzamappa
 f risultati/10_3d_vicino.png 4 originale 3d 8 vicino
+f risultati/11_fili_3d.png 4 reborn 3d 4 fili
 for p in risultati/*.png; do convert "$p" -resize 1280x -quality 80 "${p%.png}.jpg" 2>/dev/null && rm "$p"; done
 ls -la risultati
