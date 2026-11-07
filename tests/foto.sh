@@ -1,7 +1,7 @@
 #!/bin/bash
 # Fotografie dello schermo per la verifica (in risultati/).
 mkdir -p risultati
-f() { timeout 120 xvfb-run -a -s "-screen 0 1920x1080x24" ./godot --rendering-driver opengl3 --path . -s tests/foto.gd -- "$@" 2>&1 | grep -E "SALVATO|ERROR|error" | head -8; }
+f() { timeout 120 xvfb-run -a -s "-screen 0 1920x1080x24" ./godot --rendering-driver opengl3 --path . -s tests/foto.gd -- "$@" 2>&1 | grep -v ALSA | grep -E "SALVATO|SCRIPT ERROR|ERROR:|fili attivi" | head -8; }
 f risultati/01_menu.png menu
 f risultati/02_scorpii_2d.png 1 originale 2d 6 mossa
 f risultati/03_cygnus_3d.png 4 originale 3d 8

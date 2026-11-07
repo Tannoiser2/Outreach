@@ -582,6 +582,8 @@ func _filo(a: Vector3, b: Vector3, tinta: Color, disperso := false, fine := Vect
 func _aggiorna_fili(d: float) -> void:
 	if _fili.is_empty():
 		return
+	# con fotogrammi lenti l'animazione rallenta invece di saltare
+	d = minf(d, 1.0 / 30.0)
 	var vista = cam.global_position
 	for f in _fili.duplicate():
 		f["t"] = float(f["t"]) + d

@@ -154,7 +154,7 @@ func _process(d: float) -> void:
 	t += d
 	var cambia := false
 	for l in linee:
-		l["t"] += d
+		l["t"] += minf(d, 1.0 / 30.0)
 		cambia = true
 	linee = linee.filter(func(x): return x["t"] < VOLO + CODA)
 	for l in lampi:
