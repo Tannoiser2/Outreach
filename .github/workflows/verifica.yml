@@ -1,0 +1,65 @@
+# Verifica automatica a ogni modifica: importa il progetto con Godot 4.7, fa girare le prove
+# (partite IA contro IA in tutti gli scenari, salvataggio e ricarica, online simulato), scatta le
+# fotografie dello schermo, prova l'esportazione web e scrive i risultati nel ramo "verifica-risultati".
+# Non pubblica nulla: per pubblicare c'è il workflow "Pubblica".
+name: Verifica
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, sviluppo]
+    paths-ignore: ["ludoteca/**", "docs/**", "*.md"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verifica
+  cancel-in-progress: true
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scarica Godot 4.7
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          unzip -q Godot_v4.7-stable_linux.x86_64.zip
+          mv Godot_v4.7-stable_linux.x86_64 godot
+          wget -q https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_export_templates.tpz
+          T=~/.local/share/godot/export_templates/4.7.stable
+          mkdir -p $T
+          unzip -q -j Godot_v4.7-stable_export_templates.tpz templates/web_nothreads_release.zip -d $T
+          cp $T/web_nothreads_release.zip $T/web_nothreads_debug.zip
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb mesa-utils libgl1-mesa-dri > /dev/null
+          pip install --quiet fonttools
+
+      - name: Prove
+        run: |
+          mkdir -p risultati
+          bash tests/esegui_tutto.sh 2>&1 | tee risultati/prove.txt
+
+      - name: Esportazione web di prova
+        run: |
+          mkdir -p build/web
+          ./godot --headless --path . --export-release "Web" build/web/index.html 2>&1 | tail -20 | tee risultati/export.txt
+          ls -la build/web | tee -a risultati/export.txt
+
+      - name: Scrive i risultati nel ramo verifica-risultati
+        if: always()
+        run: |
+          cp -r risultati /tmp/ris
+          git config user.name "verifica"
+          git config user.email "verifica@users.noreply.github.com"
+          git fetch origin verifica-risultati || true
+          git checkout --orphan tmp-ris
+          git rm -rf --quiet . > /dev/null
+          rm -rf ./*
+          cp -r /tmp/ris/* .
+          echo "${GITHUB_SHA}" > commit.txt
+          git add -A
+          git commit -qm "Risultati della verifica di ${GITHUB_SHA::7}"
+          git push -f origin tmp-ris:verifica-risultati

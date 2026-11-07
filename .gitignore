@@ -1,0 +1,6 @@
+.godot/
+build/
+*.import
+godot
+*.zip
+*.tpz
