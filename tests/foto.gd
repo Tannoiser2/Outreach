@@ -50,6 +50,21 @@ func _init() -> void:
 		g.b3.pitch = 0.6
 		g.b3._camera()
 		await create_timer(0.5).timeout
+	if extra == "tocco":
+		var b3 = g.b3
+		var y0: float = b3.yaw
+		var d0: float = b3.dist
+		var t1 = InputEventScreenTouch.new(); t1.index = 0; t1.pressed = true; t1.position = Vector2(400, 400)
+		var t2 = InputEventScreenTouch.new(); t2.index = 1; t2.pressed = true; t2.position = Vector2(600, 400)
+		b3._gui_input(t1); b3._gui_input(t2)
+		var dr = InputEventScreenDrag.new(); dr.index = 1; dr.position = Vector2(650, 500)
+		b3._gui_input(dr)
+		print("tocco 3D: zoom %s, rotazione %s" % ["OK" if b3.dist != d0 else "NO", "OK" if b3.yaw != y0 else "NO"])
+		var b2 = g.b2
+		var z0: float = b2.zoom
+		b2._gui_input(t1); b2._gui_input(t2)
+		b2._gui_input(dr)
+		print("tocco 2D: zoom %s" % ["OK" if b2.zoom != z0 else "NO"])
 	if extra == "fili":
 		# balzi di prova per vedere i fili d'argento e le stelle faro
 		g.b3.dist = 26.0

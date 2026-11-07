@@ -101,6 +101,13 @@ func hex_at(p: Vector2) -> int:
 
 
 func _gui_input(ev: InputEvent) -> void:
+	if _tocco(ev):
+		accept_event()
+		return
+	if ev is InputEventScreenTouch or ev is InputEventScreenDrag:
+		return
+	if _tocchi.size() >= 2 and (ev is InputEventMouseMotion or ev is InputEventMouseButton):
+		return
 	if ev is InputEventMouseButton:
 		var mb = ev as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
@@ -379,3 +386,55 @@ func _disegna_filo(l: Dictionary, r: float) -> void:
 		var hp = punti[clampi(int(round(testa)), 0, tot)]
 		draw_circle(hp, r * 0.16, Color(1, 1, 1, 0.35))
 		draw_circle(hp, r * 0.08, Color(1, 1, 1, 0.95))
+
+
+# ---------------------------------------------------------------- tocco (iPad)
+## Un dito trascina (arriva come mouse emulato); due dita: pizzico per lo zoom, spostamento del centro per il pan.
+var _tocchi := {}
+var _t_dist := 0.0
+var _t_centro = Vector2.ZERO
+var _t_ang := 0.0
+
+
+func _tocco(ev: InputEvent) -> bool:
+	if ev is InputEventScreenTouch:
+		var st = ev as InputEventScreenTouch
+		if st.pressed:
+			_tocchi[st.index] = st.position
+		else:
+			_tocchi.erase(st.index)
+		if _tocchi.size() >= 2:
+			_t_init()
+		return _tocchi.size() >= 2
+	if ev is InputEventScreenDrag:
+		var sd = ev as InputEventScreenDrag
+		_tocchi[sd.index] = sd.position
+		if _tocchi.size() >= 2:
+			var k: Array = _tocchi.keys()
+			var a: Vector2 = _tocchi[k[0]]
+			var b: Vector2 = _tocchi[k[1]]
+			var d := maxf(1.0, a.distance_to(b))
+			var c = (a + b) / 2.0
+			var ang = (b - a).angle()
+			_due_dita(d / maxf(1.0, _t_dist), c, c - _t_centro, wrapf(ang - _t_ang, -PI, PI))
+			_t_dist = d
+			_t_centro = c
+			_t_ang = ang
+			return true
+	return false
+
+
+func _t_init() -> void:
+	var k: Array = _tocchi.keys()
+	var a: Vector2 = _tocchi[k[0]]
+	var b: Vector2 = _tocchi[k[1]]
+	_t_dist = maxf(1.0, a.distance_to(b))
+	_t_centro = (a + b) / 2.0
+	_t_ang = (b - a).angle()
+	_drag = false
+	_moved = true
+
+
+func _due_dita(fattore: float, centro: Vector2, sposta: Vector2, _rot: float) -> void:
+	pan += sposta
+	_zoom_at(centro, fattore)
