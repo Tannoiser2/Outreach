@@ -25,7 +25,7 @@ func _init() -> void:
 				e.anim = 0.0
 				var n: int = ODEngine.D.SCENARI[s]["giocatori"]
 				if n == 0:
-					n = 3 if sd % 2 == 1 else 1
+					n = 3 if (sd + varianti.find(v)) % 2 == 1 else 1
 				var seats := []
 				for i in n:
 					seats.append({"name": "IA", "ai": true, "level": 1})
@@ -38,7 +38,7 @@ func _init() -> void:
 						opz["gilham"] = true
 					"rivisto":
 						opz["fato_rivisto"] = true
-				e.setup({"scenario": s, "seed": sd, "seats": seats, "opzioni": opz})
+				e.setup({"scenario": s, "seed": sd, "seats": seats, "opzioni": opz, "max_turni": int(OS.get_environment("MAXT")) if OS.get_environment("MAXT") != "" else 30})
 				root.add_child(e)
 				var t0 := Time.get_ticks_msec()
 				await e.run()

@@ -157,9 +157,9 @@ func _meta(eng, s: int, h: int, fl: Dictionary, raggio: int, mete: Dictionary) -
 	var bv := -999.0
 	var p: Dictionary = eng.players[s]
 	var da_porta: bool = eng.porta_utile(h, s)
-	var portata := raggio
+	var portata := mini(raggio, 4)
 	if da_porta:
-		portata = maxi(raggio, 3)
+		portata = maxi(portata, 3)
 	var c0 := D.col(h)
 	var r0 := D.row(h)
 	for c in range(c0 - portata, c0 + portata + 1):

@@ -37,6 +37,7 @@ var rng := RandomNumberGenerator.new()
 var preload_acts: Array = []
 var pre_i := 0
 var rec_acts: Array = []
+var replay_lento := false
 
 # ---------------------------------------------------------------- stato
 var turn := 0
@@ -220,7 +221,7 @@ func _pace(sec: float) -> void:
 		return
 	if online != null and online.catchup:
 		return
-	if replaying():
+	if replaying() and not replay_lento:
 		return
 	await get_tree().create_timer(sec / anim).timeout
 
@@ -260,6 +261,9 @@ func decide(seat: int, req: Dictionary):
 		var rp = preload_acts[pre_i]
 		pre_i += 1
 		rec_acts.append(rp)
+		if replay_lento and is_inside_tree():
+			changed.emit()
+			await get_tree().create_timer(0.25 / maxf(anim, 0.1)).timeout
 		return rp
 	changed.emit()
 	var r = null
@@ -611,6 +615,8 @@ func run() -> void:
 		_controlla_eliminati()
 		_snapshot()
 		_vittoria()
+		if not over and int(config.get("max_turni", 0)) > 0 and turn >= int(config.get("max_turni", 0)):
+			_fine({"winner": -1, "reason": "limite di turni della prova"})
 		changed.emit()
 	if not over:
 		_fine({"winner": -1, "reason": "partita interrotta"})
@@ -2636,4 +2642,7 @@ func _catena_nucleo(s: int) -> bool:
 # ================================================================ salvataggio
 
 func salva() -> Dictionary:
-	return {"config": config, "acts": var_to_str(rec_acts), "turno": turn, "versione": 1}
+	var c := config.duplicate(true)
+	for k in ["acts", "replay", "codice", "online"]:
+		c.erase(k)
+	return {"config": c, "acts": var_to_str(rec_acts), "turno": turn, "versione": 1}
