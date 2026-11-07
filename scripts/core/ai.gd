@@ -475,7 +475,7 @@ func _risorse(eng, s: int, rp: int) -> Array:
 				break
 			var margine: int = eng.potenziale(h) - int(eng.porte[h]["sp"]) - eng.n_flotte(h, s)
 			var t = D.terreno(h)
-			var tipi := ["r"]
+			var tipi = ["r"]
 			if margine <= 0:
 				if t == "A" and int(tot["e"]) < 2 + eng.punti_sistema(s) / 12 and not p["guardiani"]:
 					tipi = ["e", "r"]

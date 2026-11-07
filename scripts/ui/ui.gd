@@ -100,7 +100,7 @@ static func make_theme() -> Theme:
 	t.set_stylebox("normal", "SpinBox", le)
 	t.set_color("font_color", "LineEdit", TESTO)
 	t.set_font("normal_font", "RichTextLabel", font("testo"))
-	t.set_font("bold_font", "RichTextLabel", font("testo_grassetto"))
+	t.set_font("bold_font", "RichTextLabel", font("intestazione"))
 	t.set_font("italics_font", "RichTextLabel", font("serif"))
 	t.set_font("mono_font", "RichTextLabel", font("numeri"))
 	var sl := StyleBoxFlat.new()

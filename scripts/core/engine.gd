@@ -871,7 +871,7 @@ func _salto(o: int, da: int, a: int, forza: Dictionary, carico: Array) -> Dictio
 	var autonomo = o >= 10
 	var gil: bool = opz.get("gilham", false) and not autonomo
 	var esito = {"ok": true, "perso": false, "h": a, "forza": forza, "oltre": oltre}
-	var desc = "%s: %d flotte da %s a %s (%d esagoni)" % [fazione(o), _n(forza), D.nome(da), D.nome(a), dist]
+	var desc = "%s: %d %s da %s a %s (%d %s)" % [fazione(o), _n(forza), "flotta" if _n(forza) == 1 else "flotte", D.nome(da), D.nome(a), dist, "esagono" if dist == 1 else "esagoni"]
 	if dist >= 2:
 		var m = mod_dispersione(o, a, forza)
 		var d = dado()

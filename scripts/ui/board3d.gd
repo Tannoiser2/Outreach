@@ -94,6 +94,10 @@ func pos(h: int) -> Vector3:
 
 
 func _piano() -> void:
+	# in 3D la galassia è la nuvola: sotto c'è sempre la griglia degli esagoni (o la mappa Reborn)
+	var vecchio = Grafica.stile
+	if Grafica.stile != "reborn":
+		Grafica.stile = "reborn"
 	var tex: Texture2D = Grafica.mappa()
 	var mi := MeshInstance3D.new()
 	mi.name = "Piano"
@@ -115,6 +119,7 @@ func _piano() -> void:
 	mi.mesh = pm
 	mi.position = Vector3(-a.x * sx + w * sx / 2.0, 0, -a.y * sz + hh * sz / 2.0)
 	root3.add_child(mi)
+	Grafica.stile = vecchio
 	# la galassia: due strati di nuvola trasparente sopra la griglia
 	var gal: Texture2D = load("res://assets/board/galassia.png")
 	var neb: Texture2D = load("res://assets/board/nebulosa.png")

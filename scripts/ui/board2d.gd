@@ -78,9 +78,10 @@ func hex_at(p: Vector2) -> int:
 		c0 = int(round(u.x / 1.5)) + 1
 		r0 = int(round(u.y / sqrt(3.0))) + 1
 	else:
-		var k = w / 10000.0
-		c0 = int(round((tp.x / k - Grafica.OX) / Grafica.OPX)) + 7
-		r0 = int(round((tp.y / k - Grafica.OY) / Grafica.OPY)) + 1
+		var g = Grafica.geom()
+		var k = w / float(g[4])
+		c0 = int(round((tp.x / k - g[0]) / g[2])) + 7
+		r0 = int(round((tp.y / k - g[1]) / g[3])) + 1
 	for c in range(c0 - 1, c0 + 2):
 		for rr in range(r0 - 1, r0 + 2):
 			var h = D.hx(c, rr)

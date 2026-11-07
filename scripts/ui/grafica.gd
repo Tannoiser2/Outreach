@@ -69,10 +69,19 @@ static func mappa() -> Texture2D:
 			t = load("res://assets/reborn/mappa.jpg")
 		else:
 			t = load("res://assets/board/griglia.jpg")
+	elif stile == "riveduta":
+		t = load("res://assets/board/mappa_riveduta.jpg")
 	else:
 		t = load("res://assets/board/mappa.jpg")
 	_cache[k] = t
 	return t
+
+
+## Geometria della mappa di fondo: [x della colonna 7, y della riga 1, passo colonne, passo righe, larghezza di riferimento].
+static func geom() -> Array:
+	if stile == "riveduta":
+		return [430.0, 56.0, 62.0, 72.5, 3220.0]
+	return [OX, OY, OPX, OPY, 10000.0]
 
 
 static func usa_griglia() -> bool:
@@ -96,9 +105,10 @@ static func centro_px(h: int, tex_w: float) -> Vector2:
 	if usa_griglia():
 		var p = D.centro(h)
 		return Vector2((p.x + GMX) * GS, (p.y + GMY) * GS) * (tex_w / 4045.0)
-	var k = tex_w / 10000.0
-	var x = OX + (c - 7) * OPX
-	var y = OY + (r - 1) * OPY + (0.0 if c % 2 == 1 else OPY / 2.0)
+	var g = geom()
+	var k = tex_w / float(g[4])
+	var x = g[0] + (c - 7) * g[2]
+	var y = g[1] + (r - 1) * g[3] + (0.0 if c % 2 == 1 else g[3] / 2.0)
 	return Vector2(x, y) * k
 
 
@@ -106,4 +116,5 @@ static func centro_px(h: int, tex_w: float) -> Vector2:
 static func raggio_px(tex_w: float) -> float:
 	if usa_griglia():
 		return GS * (tex_w / 4045.0)
-	return OPX / 1.5 * (tex_w / 10000.0)
+	var g = geom()
+	return g[2] / 1.5 * (tex_w / float(g[4]))

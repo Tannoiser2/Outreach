@@ -28,6 +28,14 @@ func _ready() -> void:
 		stile = main.menu_state["stile"]
 		n_seme = main.menu_state["n_seme"]
 		posti = main.menu_state["posti"]
+	if ResourceLoader.exists("res://assets/reborn/sfondo_menu.jpg"):
+		var sf := TextureRect.new()
+		sf.texture = load("res://assets/reborn/sfondo_menu.jpg")
+		sf.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		sf.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sf.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		sf.modulate = Color(1, 1, 1, 0.75)
+		add_child(sf)
 	var m := MarginContainer.new()
 	m.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for k in ["left", "right"]:
@@ -211,9 +219,11 @@ func _opzioni(dove: VBoxContainer) -> void:
 	r2.add_child(UI.label("Grafica: ", 17))
 	var og := OptionButton.new()
 	og.add_item("Originale (mappa e pedine SPI)")
+	og.add_item("Mappa riveduta con le pedine originali")
 	og.add_item("Reborn (griglia, galassia e pedine nuove)")
-	og.selected = 1 if stile == "reborn" else 0
-	og.item_selected.connect(func(x): stile = "reborn" if x == 1 else "originale")
+	var stili = ["originale", "riveduta", "reborn"]
+	og.selected = maxi(0, stili.find(stile))
+	og.item_selected.connect(func(x): stile = stili[x])
 	r2.add_child(og)
 	r2.add_child(UI.label("   Animazioni: ", 17))
 	var ov := OptionButton.new()

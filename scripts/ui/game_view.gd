@@ -192,11 +192,12 @@ func _cambia_nuvola() -> void:
 
 
 func _cambia_grafica() -> void:
-	Grafica.stile = "reborn" if Grafica.stile == "originale" else "originale"
+	var giro = ["originale", "riveduta", "reborn"]
+	Grafica.stile = giro[(giro.find(Grafica.stile) + 1) % 3]
 	b2.ricarica()
 	b2.adatta()
 	b3.ricarica()
-	_messaggio("Grafica: %s%s" % [Grafica.stile, "" if Grafica.reborn_disponibile() or Grafica.stile == "originale" else " (pedine Reborn non ancora presenti: si usano le originali sulla griglia nuova)"])
+	_messaggio("Grafica: %s%s" % [{"originale": "mappa e pedine originali", "riveduta": "mappa riveduta con le pedine originali", "reborn": "Reborn"}[Grafica.stile], "" if Grafica.reborn_disponibile() or Grafica.stile != "reborn" else " (pedine Reborn non ancora presenti: si usano le originali sulla griglia nuova)"])
 
 
 func _esci() -> void:
@@ -526,7 +527,7 @@ func _mete(s: int, da: int, riserva: bool) -> void:
 				continue
 			var ri = eng.rischio(s, da, h, forza)
 			var k := int(ri["rischio"])
-			b2.bersagli[h] = Color(0.4, 0.9, 1.0, 0.55) if k == 0 else Color(1.0, 0.75 - k * 0.1, 0.3, 0.55)
+			b2.bersagli[h] = Color(0.4, 0.9, 1.0, 0.35) if k == 0 else Color(1.0, 0.75 - k * 0.1, 0.3, 0.3)
 	if dest > 0:
 		b2.bersagli[dest] = Color(1, 1, 1, 0.95)
 
@@ -878,6 +879,16 @@ func _chiudi_finestra() -> void:
 func _finestra(titolo: String, largo := 900.0) -> VBoxContainer:
 	_chiudi_finestra()
 	finestra = PanelContainer.new()
+	var fsb := StyleBoxFlat.new()
+	fsb.bg_color = Color(0.05, 0.055, 0.085, 1.0)
+	fsb.border_color = UI.AMBRA
+	fsb.set_border_width_all(2)
+	fsb.set_corner_radius_all(4)
+	fsb.content_margin_left = 16
+	fsb.content_margin_right = 16
+	fsb.content_margin_top = 12
+	fsb.content_margin_bottom = 12
+	finestra.add_theme_stylebox_override("panel", fsb)
 	finestra.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	finestra.offset_left = 60
 	finestra.offset_top = 50
