@@ -12,7 +12,7 @@ var vista := -1                    # il giocatore di cui si mostrano le informaz
 var tutto_visibile := false
 var tex: Texture2D
 var nuv_sotto: Texture2D
-var linee: Texture2D
+var tex_linee: Texture2D
 var opac_mappa := 1.0
 var opac_griglia := 0.0
 var zoom := 0.3
@@ -40,7 +40,7 @@ func _ready() -> void:
 func ricarica() -> void:
 	tex = Grafica.mappa()
 	nuv_sotto = load("res://assets/board/nuvola_sotto.png")
-	linee = load("res://assets/board/linee.png")
+	tex_linee = load("res://assets/board/linee.png")
 	queue_redraw()
 
 
@@ -198,8 +198,8 @@ func _draw() -> void:
 		draw_texture_rect(nuv_sotto, rg, false, Color(1, 1, 1, 0.9))
 	if opac_mappa > 0.001:
 		draw_texture_rect(tex, Rect2(pan, tex.get_size() * zoom), false, Color(1, 1, 1, opac_mappa))
-	if opac_griglia > 0.001 and linee != null:
-		draw_texture_rect(linee, rg, false, Color(1, 1, 1, opac_griglia))
+	if opac_griglia > 0.001 and tex_linee != null:
+		draw_texture_rect(tex_linee, rg, false, Color(1, 1, 1, opac_griglia))
 	if eng == null:
 		return
 	var r = rpx()
