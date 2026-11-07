@@ -50,6 +50,8 @@ func _ready() -> void:
 	if online != null:
 		add_child(online)
 		mio_posto = online.seat
+	if Grafica.stile == "reborn":
+		opac["2d"]["griglia"] = 0.85
 	var bg := ColorRect.new()
 	bg.color = UI.SPAZIO
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

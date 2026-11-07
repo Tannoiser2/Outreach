@@ -150,7 +150,7 @@ func _piano() -> void:
 	var linee: Texture2D = load("res://assets/board/linee.png")
 	# [texture, quota, alfa, priorità, nome]
 	var strati = [[sotto, -2.6, 0.8, -3, "NuvolaS1"], [sotto, -1.1, 0.75, -2, "NuvolaS2"],
-		[linee, 0.03, 1.0, 0, "Griglia"], [sopra, 1.5, 0.42, 1, "NuvolaA1"], [sopra, 3.0, 0.25, 2, "NuvolaA2"]]
+		[linee, 0.03, 1.0, 0, "Griglia"], [sopra, 1.5, 0.3, 1, "NuvolaA1"], [sopra, 3.0, 0.16, 2, "NuvolaA2"]]
 	_quote_nuvole.clear()
 	for st in strati:
 		var n := MeshInstance3D.new()
@@ -440,8 +440,8 @@ func aggiorna() -> void:
 	for h in eng.fari:
 		var f := MeshInstance3D.new()
 		var sm := SphereMesh.new()
-		sm.radius = 0.16
-		sm.height = 0.32
+		sm.radius = 0.09
+		sm.height = 0.18
 		var mf := StandardMaterial3D.new()
 		mf.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mf.albedo_color = Color(1, 0.75, 0.55) if D.faro_stampato(h) != "" else Color(0.8, 0.9, 1.0)
@@ -450,7 +450,7 @@ func aggiorna() -> void:
 		mf.emission_energy_multiplier = 3.0
 		sm.material = mf
 		f.mesh = sm
-		f.position = pos(h) + Vector3(0, 0.25, 0.25)
+		f.position = pos(h) + Vector3(0, 0.06, 0.25)
 		pedine.add_child(f)
 	for h in eng.pv:
 		if eng.porte.has(h):
