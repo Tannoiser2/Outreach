@@ -50,6 +50,21 @@ func _init() -> void:
 		g.b3.pitch = 0.6
 		g.b3._camera()
 		await create_timer(0.5).timeout
+	if extra == "fili":
+		# balzi di prova per vedere i fili d'argento e le stelle faro
+		g.b3.dist = 26.0
+		g.b3.pitch = 0.7
+		g.b3.target = g.b3.pos(1215)
+		g.b3._camera()
+		for m in [[1316, 1118, 0, ""], [813, 1212, 1, ""], [1312, 1709, 2, ""], [1018, 920, 3, "d"]]:
+			var dati = {"o": m[2], "da": m[0], "a": m[1]}
+			if m[3] == "d":
+				dati["h"] = 1022
+			g.b3.effetto("disperso" if m[3] == "d" else "salto", dati)
+			g.b2.effetto("disperso" if m[3] == "d" else "salto", dati)
+		for k in 22:
+			await process_frame
+		print("fili attivi: ", g.b3._fili.size())
 	var img = root.get_viewport().get_texture().get_image()
 	img.save_png(out)
 	print("SALVATO ", out, " ", img.get_size())
