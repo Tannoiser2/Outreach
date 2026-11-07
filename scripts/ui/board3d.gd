@@ -80,7 +80,8 @@ func _ready() -> void:
 
 func ricarica() -> void:
 	for c in root3.get_children():
-		if c.name.begins_with("Piano") or c.name.begins_with("Nuvola"):
+		if c.name.begins_with("Piano") or c.name.begins_with("Nuvola") or c.name.begins_with("Griglia"):
+			root3.remove_child(c)
 			c.queue_free()
 	nuvole.clear()
 	_piano()
@@ -93,63 +94,105 @@ func pos(h: int) -> Vector3:
 	return Vector3(p.x, 0, p.y)
 
 
+## Opacità degli strati (0..1), regolate dai cursori della schermata di gioco.
+var opac_mappa := 1.0
+var opac_griglia := 0.8
+var _mat_mappa: StandardMaterial3D
+var _mat_linee: StandardMaterial3D
+var _quote_nuvole := []
+var _nodo_piano: Node3D
+var _nodo_griglia: Node3D
+
+
+## Strati dal basso: nuvola sotto (due veli), mappa (originale, riveduta o Reborn), griglia con
+## numeri, polvere e nomi delle stelle, nuvola sopra (due veli più leggeri). Le pedine stanno
+## fra la mappa e la nuvola sopra e si vedono attraverso.
 func _piano() -> void:
-	# in 3D la galassia è la nuvola: sotto c'è sempre la griglia degli esagoni (o la mappa Reborn)
-	var vecchio = Grafica.stile
-	if Grafica.stile != "reborn":
-		Grafica.stile = "reborn"
-	var tex: Texture2D = Grafica.mappa()
-	var mi := MeshInstance3D.new()
-	mi.name = "Piano"
-	var pm := PlaneMesh.new()
-	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = tex
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	pm.material = mat
-	# la texture va messa in modo che i centri degli esagoni coincidano con D.centro()
-	var w := float(tex.get_width())
-	var hh := float(tex.get_height())
-	var a = Grafica.centro_px(101, w)
-	var b = Grafica.centro_px(5101, w)
-	var c = Grafica.centro_px(129, w)
-	var sx = (D.centro(5101).x - D.centro(101).x) / (b.x - a.x)
-	var sz = (D.centro(129).y - D.centro(101).y) / (c.y - a.y)
-	pm.size = Vector2(w * sx, hh * sz)
-	mi.mesh = pm
-	mi.position = Vector3(-a.x * sx + w * sx / 2.0, 0, -a.y * sz + hh * sz / 2.0)
-	root3.add_child(mi)
-	Grafica.stile = vecchio
-	# la galassia: due strati di nuvola trasparente sopra la griglia
-	var gal: Texture2D = load("res://assets/board/galassia.png")
-	var neb: Texture2D = load("res://assets/board/nebulosa.png")
-	var gw := 4045.0
-	var gsx = 1.0 / Grafica.GS
-	var size := Vector2(gw * gsx, 2712.0 * gsx)
+	# --- la mappa di fondo, con la sua geometria
+	var tex: Texture2D = null
+	if Grafica.stile == "reborn":
+		if ResourceLoader.exists("res://assets/reborn/mappa.jpg"):
+			tex = load("res://assets/reborn/mappa.jpg")
+	else:
+		tex = Grafica.mappa()
+	if tex != null:
+		var mi := MeshInstance3D.new()
+		mi.name = "Piano"
+		var pm := PlaneMesh.new()
+		_mat_mappa = StandardMaterial3D.new()
+		_mat_mappa.albedo_texture = tex
+		_mat_mappa.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_mat_mappa.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mat_mappa.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+		_mat_mappa.render_priority = -1
+		_mat_mappa.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		pm.material = _mat_mappa
+		var w := float(tex.get_width())
+		var hh := float(tex.get_height())
+		var a = Grafica.centro_px(101, w)
+		var b = Grafica.centro_px(5101, w)
+		var c = Grafica.centro_px(129, w)
+		var sx = (D.centro(5101).x - D.centro(101).x) / (b.x - a.x)
+		var sz = (D.centro(129).y - D.centro(101).y) / (c.y - a.y)
+		pm.size = Vector2(w * sx, hh * sz)
+		mi.mesh = pm
+		mi.position = Vector3(-a.x * sx + w * sx / 2.0, 0, -a.y * sz + hh * sz / 2.0)
+		root3.add_child(mi)
+		_nodo_piano = mi
+	else:
+		_mat_mappa = null
+		_nodo_piano = null
+	# --- gli strati generati (stessa geometria): nuvole e griglia
+	var size = Vector2(4045.0, 2712.0) / Grafica.GS
 	var centro := Vector3(-Grafica.GMX + size.x / 2.0, 0, -Grafica.GMY + size.y / 2.0)
-	var strati = [[gal, 1.6, 0.5], [gal, 3.2, 0.22], [neb, 5.0, 0.35]]
-	var i := 0
-	for s in strati:
+	var sotto: Texture2D = load("res://assets/board/nuvola_sotto.png")
+	var sopra: Texture2D = load("res://assets/board/nuvola_sopra.png")
+	var linee: Texture2D = load("res://assets/board/linee.png")
+	# [texture, quota, alfa, priorità, nome]
+	var strati = [[sotto, -2.6, 0.8, -3, "NuvolaS1"], [sotto, -1.1, 0.75, -2, "NuvolaS2"],
+		[linee, 0.03, 1.0, 0, "Griglia"], [sopra, 1.5, 0.42, 1, "NuvolaA1"], [sopra, 3.0, 0.25, 2, "NuvolaA2"]]
+	_quote_nuvole.clear()
+	for st in strati:
 		var n := MeshInstance3D.new()
-		n.name = "Nuvola%d" % i
+		n.name = st[4]
 		var q := PlaneMesh.new()
-		q.size = size * (1.0 + i * 0.04)
+		q.size = size * (1.0 + absf(st[1]) * 0.012)
 		var m2 := StandardMaterial3D.new()
-		m2.albedo_texture = s[0]
-		m2.albedo_color = Color(1, 1, 1, s[2])
+		m2.albedo_texture = st[0]
+		m2.albedo_color = Color(1, 1, 1, st[2])
 		m2.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		m2.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		m2.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		m2.cull_mode = BaseMaterial3D.CULL_DISABLED
-		m2.no_depth_test = false
 		m2.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+		m2.render_priority = st[3]
+		m2.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 		q.material = m2
 		n.mesh = q
-		n.position = centro + Vector3(0, s[1], 0)
-		n.visible = nuvola
+		n.position = centro + Vector3(0, st[1], 0)
 		root3.add_child(n)
-		nuvole.append(n)
-		i += 1
+		if st[4] == "Griglia":
+			_mat_linee = m2
+			_nodo_griglia = n
+		else:
+			n.visible = nuvola
+			n.set_meta("alfa", st[2])
+			nuvole.append(n)
+			_quote_nuvole.append(st[1])
+	set_opacita(opac_mappa, opac_griglia)
+
+
+func set_opacita(mappa: float, griglia: float) -> void:
+	opac_mappa = mappa
+	opac_griglia = griglia
+	if _mat_mappa != null:
+		_mat_mappa.albedo_color = Color(1, 1, 1, mappa)
+		_mat_mappa.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED if mappa >= 0.999 else BaseMaterial3D.TRANSPARENCY_ALPHA
+		if _nodo_piano != null:
+			_nodo_piano.visible = mappa > 0.001
+	if _mat_linee != null:
+		_mat_linee.albedo_color = Color(1, 1, 1, griglia)
+		if _nodo_griglia != null:
+			_nodo_griglia.visible = griglia > 0.001
 
 
 func _stelle_fondo() -> void:
@@ -205,7 +248,7 @@ func _process(d: float) -> void:
 		var n: MeshInstance3D = nuvole[i]
 		var a = sin(t * 0.05 + i) * 0.015 * (i + 1)
 		n.rotation.y = a
-		n.position.y = [1.6, 3.2, 5.0][i] + sin(t * 0.3 + i) * 0.15
+		n.position.y = float(_quote_nuvole[i]) + sin(t * 0.3 + i) * 0.12
 	if _sel_mesh != null:
 		_sel_mesh.rotation.y += d * 1.5
 		_sel_mesh.scale = Vector3.ONE * (1.0 + 0.06 * sin(t * 5.0))
@@ -407,7 +450,7 @@ func aggiorna() -> void:
 		mf.emission_energy_multiplier = 3.0
 		sm.material = mf
 		f.mesh = sm
-		f.position = pos(h) + Vector3(-0.5, 0.9, 0.5)
+		f.position = pos(h) + Vector3(0, 0.25, 0.25)
 		pedine.add_child(f)
 	for h in eng.pv:
 		if eng.porte.has(h):

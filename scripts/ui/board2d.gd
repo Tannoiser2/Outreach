@@ -11,7 +11,10 @@ var eng: ODEngine
 var vista := -1                    # il giocatore di cui si mostrano le informazioni (-1 = tutto)
 var tutto_visibile := false
 var tex: Texture2D
-var gal: Texture2D
+var nuv_sotto: Texture2D
+var linee: Texture2D
+var opac_mappa := 1.0
+var opac_griglia := 0.0
 var zoom := 0.3
 var pan = Vector2.ZERO
 var selezionato := -1
@@ -25,7 +28,7 @@ var linee: Array = []              # [{da, a, col, t}]
 var lampi: Array = []              # [{h, col, t, r}]
 var t := 0.0
 var mostra_numeri := true
-var nuvola := true
+var nuvola := false
 
 
 func _ready() -> void:
@@ -36,7 +39,8 @@ func _ready() -> void:
 
 func ricarica() -> void:
 	tex = Grafica.mappa()
-	gal = load("res://assets/board/galassia.png") if Grafica.usa_griglia() else null
+	nuv_sotto = load("res://assets/board/nuvola_sotto.png")
+	linee = load("res://assets/board/linee.png")
 	queue_redraw()
 
 
@@ -189,9 +193,13 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.02, 0.02, 0.04))
 	if tex == null:
 		return
-	draw_texture_rect(tex, Rect2(pan, tex.get_size() * zoom), false)
-	if gal != null and nuvola:
-		draw_texture_rect(gal, Rect2(pan, tex.get_size() * zoom), false, Color(1, 1, 1, 0.42))
+	var rg = _rect_generati()
+	if nuvola and nuv_sotto != null:
+		draw_texture_rect(nuv_sotto, rg, false, Color(1, 1, 1, 0.9))
+	if opac_mappa > 0.001:
+		draw_texture_rect(tex, Rect2(pan, tex.get_size() * zoom), false, Color(1, 1, 1, opac_mappa))
+	if opac_griglia > 0.001 and linee != null:
+		draw_texture_rect(linee, rg, false, Color(1, 1, 1, opac_griglia))
 	if eng == null:
 		return
 	var r = rpx()
@@ -224,8 +232,6 @@ func _draw() -> void:
 		var p2 = px(h) + Vector2(-r * 0.45, r * 0.4)
 		if tf != null:
 			draw_texture_rect(tf, Rect2(p2 - Vector2(r, r) * 0.22, Vector2(r, r) * 0.44), false)
-		if Grafica.usa_griglia() and D.faro_stampato(h) != "" and zoom > 0.35:
-			draw_string(UI.font("serif"), px(h) + Vector2(-r, r * 0.85), D.faro_stampato(h), HORIZONTAL_ALIGNMENT_CENTER, r * 2, int(r * 0.22), Color(1, 0.45, 0.35))
 	# saggezza nel centro
 	var ts = Grafica.tex("saggezza")
 	for h in eng.sag_centro:
@@ -298,6 +304,18 @@ func _draw() -> void:
 		var k := float(l["t"])
 		c2.a = clampf(k, 0.0, 1.0) * 0.8
 		draw_arc(px(int(l["h"])), r * float(l["r"]) * (1.6 - k * 0.5), 0, TAU, 40, c2, 4.0, true)
+
+
+## Rettangolo a schermo delle immagini generate (nuvole e griglia), allineato alla mappa di fondo.
+func _rect_generati() -> Rect2:
+	var w := float(tex.get_width())
+	var a: Vector2 = Grafica.centro_px(101, w)
+	var b: Vector2 = Grafica.centro_px(5129, w)
+	var ga = (D.centro(101) + Vector2(Grafica.GMX, Grafica.GMY)) * Grafica.GS
+	var gb = (D.centro(5129) + Vector2(Grafica.GMX, Grafica.GMY)) * Grafica.GS
+	var k := Vector2((b.x - a.x) / (gb.x - ga.x), (b.y - a.y) / (gb.y - ga.y))
+	var o = a - ga * k
+	return Rect2(pan + o * zoom, Vector2(4045.0, 2712.0) * k * zoom)
 
 
 func _vede_porta(o: int) -> bool:

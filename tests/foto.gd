@@ -3,7 +3,7 @@ extends SceneTree
 ## godot --path . -s tests/foto.gd -- file.png [menu|scenario] [stile] [3d] [secondi] [extra]
 
 func _init() -> void:
-	var a := OS.get_cmdline_user_args()
+	var a = OS.get_cmdline_user_args()
 	var out: String = a[0] if a.size() > 0 else "/tmp/foto.png"
 	var cosa: String = a[1] if a.size() > 1 else "menu"
 	var stile: String = a[2] if a.size() > 2 else "originale"
@@ -41,7 +41,16 @@ func _init() -> void:
 			var lib: Array = g.req["libere"]
 			g._on_hex(lib[0])
 			await create_timer(0.5).timeout
-	var img := root.get_viewport().get_texture().get_image()
+	if extra == "senzamappa":
+		g.opac["3d"]["mappa"] = 0.0
+		g._aggiorna_cursori()
+		await create_timer(0.5).timeout
+	if extra == "vicino":
+		g.b3.dist = 14.0
+		g.b3.pitch = 0.6
+		g.b3._camera()
+		await create_timer(0.5).timeout
+	var img = root.get_viewport().get_texture().get_image()
 	img.save_png(out)
 	print("SALVATO ", out, " ", img.get_size())
 	quit()

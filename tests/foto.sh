@@ -10,5 +10,7 @@ f risultati/05_seme_reborn_2d.png 5 reborn 2d 8 ia
 f risultati/06_tabelle.png 3 originale 2d 3 tabelle
 f risultati/07_plancia.png 4 originale 2d 15 plancia
 f risultati/08_regole.png regole
+f risultati/09_3d_senza_mappa.png 4 originale 3d 8 senzamappa
+f risultati/10_3d_vicino.png 4 originale 3d 8 vicino
 for p in risultati/*.png; do convert "$p" -resize 1280x -quality 80 "${p%.png}.jpg" 2>/dev/null && rm "$p"; done
 ls -la risultati

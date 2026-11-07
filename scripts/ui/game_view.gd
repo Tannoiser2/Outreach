@@ -36,6 +36,10 @@ var azioni_ris: Array = []
 var stato_ris := {}
 var hex_ris := -1
 var _scelte := {}
+var sl_mappa: HSlider
+var sl_griglia: HSlider
+var opac = {"2d": {"mappa": 1.0, "griglia": 0.0}, "3d": {"mappa": 0.45, "griglia": 0.85}}
+var _cursori_ok := false
 
 
 func _ready() -> void:
@@ -72,7 +76,7 @@ func _ready() -> void:
 	b3.hex_hovered.connect(_on_hover)
 	_barra(area)
 	stato_lbl = UI.label("", 15, UI.TESTO)
-	stato_lbl.position = Vector2(12, 56)
+	stato_lbl.position = Vector2(12, 96)
 	stato_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
 	stato_lbl.add_theme_constant_override("outline_size", 6)
 	area.add_child(stato_lbl)
@@ -174,6 +178,63 @@ func _barra(area: Control) -> void:
 	barra.add_child(UI.bottone("Regole", _mostra_regole, 15))
 	barra.add_child(UI.bottone("Salva", _salva, 15))
 	barra.add_child(UI.bottone("Menu", _esci, 15))
+	# cursori dell'opacità: mappa originale e griglia con i nomi delle stelle (valori separati per 2D e 3D)
+	var cur := HBoxContainer.new()
+	cur.position = Vector2(10, 50)
+	cur.add_theme_constant_override("separation", 8)
+	var fondo := StyleBoxFlat.new()
+	fondo.bg_color = Color(0.04, 0.045, 0.07, 0.85)
+	fondo.set_corner_radius_all(4)
+	fondo.content_margin_left = 10
+	fondo.content_margin_right = 10
+	fondo.content_margin_top = 4
+	fondo.content_margin_bottom = 4
+	var pc := PanelContainer.new()
+	pc.add_theme_stylebox_override("panel", fondo)
+	pc.position = Vector2(10, 50)
+	pc.add_child(cur)
+	area.add_child(pc)
+	cur.add_child(UI.label("Mappa", 14, UI.TESTO))
+	sl_mappa = HSlider.new()
+	sl_mappa.min_value = 0.0
+	sl_mappa.max_value = 1.0
+	sl_mappa.step = 0.01
+	sl_mappa.custom_minimum_size = Vector2(150, 22)
+	sl_mappa.value_changed.connect(func(v): _set_opacita("mappa", v))
+	cur.add_child(sl_mappa)
+	cur.add_child(UI.label("Griglia e stelle", 14, UI.TESTO))
+	sl_griglia = HSlider.new()
+	sl_griglia.min_value = 0.0
+	sl_griglia.max_value = 1.0
+	sl_griglia.step = 0.01
+	sl_griglia.custom_minimum_size = Vector2(150, 22)
+	sl_griglia.value_changed.connect(func(v): _set_opacita("griglia", v))
+	cur.add_child(sl_griglia)
+	_aggiorna_cursori()
+
+
+func _set_opacita(k: String, v: float) -> void:
+	if not _cursori_ok:
+		return
+	opac["3d" if vista3d else "2d"][k] = v
+	_applica_opacita()
+
+
+func _applica_opacita() -> void:
+	b2.opac_mappa = opac["2d"]["mappa"]
+	b2.opac_griglia = opac["2d"]["griglia"]
+	b2.queue_redraw()
+	if b3 != null and b3.root3 != null:
+		b3.set_opacita(opac["3d"]["mappa"], opac["3d"]["griglia"])
+
+
+func _aggiorna_cursori() -> void:
+	_cursori_ok = false
+	var o: Dictionary = opac["3d" if vista3d else "2d"]
+	sl_mappa.value = o["mappa"]
+	sl_griglia.value = o["griglia"]
+	_cursori_ok = true
+	_applica_opacita()
 
 
 func _cambia_vista() -> void:
@@ -183,12 +244,15 @@ func _cambia_vista() -> void:
 	(barra.get_child(0) as Button).text = "2D" if vista3d else "3D"
 	if vista3d:
 		b3.aggiorna()
+	_aggiorna_cursori()
 
 
 func _cambia_nuvola() -> void:
-	b2.nuvola = not b2.nuvola
-	b3.set_nuvola(not b3.nuvola)
-	b2.queue_redraw()
+	if vista3d:
+		b3.set_nuvola(not b3.nuvola)
+	else:
+		b2.nuvola = not b2.nuvola
+		b2.queue_redraw()
 
 
 func _cambia_grafica() -> void:
@@ -197,6 +261,7 @@ func _cambia_grafica() -> void:
 	b2.ricarica()
 	b2.adatta()
 	b3.ricarica()
+	_applica_opacita()
 	_messaggio("Grafica: %s%s" % [{"originale": "mappa e pedine originali", "riveduta": "mappa riveduta con le pedine originali", "reborn": "Reborn"}[Grafica.stile], "" if Grafica.reborn_disponibile() or Grafica.stile != "reborn" else " (pedine Reborn non ancora presenti: si usano le originali sulla griglia nuova)"])
 
 
