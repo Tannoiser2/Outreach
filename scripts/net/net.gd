@@ -24,9 +24,9 @@ const CODE_LETTERS := "ABCDEFGHJKLMNPQRSTUVWXYZ"
 const ROOT := "outreach/rooms"
 const SAVES := "outreach/partite"
 
-var db_url := DB_URL
-var auth_url := AUTH_URL + API_KEY
-var refresh_url := REFRESH_URL + API_KEY
+var db_url = DB_URL
+var auth_url = AUTH_URL + API_KEY
+var refresh_url = REFRESH_URL + API_KEY
 var uid := ""
 var id_token := ""
 var refresh_token := ""
@@ -36,13 +36,13 @@ var last_room := {}
 
 func _init() -> void:
 	# per le prove automatiche si può puntare a un finto Firebase locale
-	var test_db := OS.get_environment("OR_DB_URL")
+	var test_db = OS.get_environment("OR_DB_URL")
 	if OS.has_feature("web"):
 		# nella versione web: ?sfdb=<indirizzo> nella pagina
 		var q = JavaScriptBridge.eval("new URLSearchParams(location.search).get('ordb') || ''")
 		test_db = str(q) if q != null else ""
 		if test_db != "":
-			var base := test_db.get_base_dir()
+			var base = test_db.get_base_dir()
 			OS.set_environment("OR_AUTH_URL", base + "/signup")
 			OS.set_environment("OR_REFRESH_URL", base + "/refresh")
 	if test_db != "":
@@ -82,8 +82,8 @@ func _request_once(method: int, url: String, body = null, form := false) -> Dict
 	var payload := ""
 	if body != null:
 		payload = body if form else JSON.stringify(body)
-	var where := _where(url)
-	var err := http.request(url, headers, method, payload)
+	var where = _where(url)
+	var err = http.request(url, headers, method, payload)
 	if err != OK:
 		http.queue_free()
 		last_error = "%s: richiesta non partita, errore %d" % [where, err]
@@ -99,7 +99,7 @@ func _request_once(method: int, url: String, body = null, form := false) -> Dict
 		push_warning("Net " + last_error)
 		return {"code": 0, "data": null}
 	if code >= 300:
-		var msg := text.substr(0, 160)
+		var msg = text.substr(0, 160)
 		if data is Dictionary and data.get("error") is Dictionary:
 			msg = str(data["error"].get("message", msg))
 		elif data is Dictionary and data.has("error"):
@@ -125,7 +125,7 @@ const WEB_PREFIX := "or_"
 func sign_in() -> bool:
 	if id_token != "":
 		return await _fresh()
-	var saved := load_session()
+	var saved = load_session()
 	if saved.get("refresh", "") != "":
 		var rr = await _request(HTTPClient.METHOD_POST, refresh_url, "grant_type=refresh_token&refresh_token=" + str(saved["refresh"]).uri_encode(), true)
 		if rr["code"] == 200 and rr["data"] is Dictionary and rr["data"].get("id_token", "") != "":
@@ -151,7 +151,7 @@ func sign_in() -> bool:
 const TAB_KEYS := ["refresh", "uid", "room", "seat"]
 
 func _session_file() -> String:
-	var f := OS.get_environment("OR_SESSION")
+	var f = OS.get_environment("OR_SESSION")
 	return f if f != "" else SESSION_FILE
 
 func load_session() -> Dictionary:
@@ -231,7 +231,7 @@ func create_room(player: String, seats: Array) -> String:
 		var existing = await db_get((ROOT + "/%s/host") % code)
 		if existing["code"] == 200 and existing["data"] != null:
 			continue
-		var body := {"host": uid, "created": {".sv": "timestamp"}, "status": "lobby",
+		var body = {"host": uid, "created": {".sv": "timestamp"}, "status": "lobby",
 			"open": seats, ("seats/%d" % seats[0]): {"uid": uid, "name": player}}
 		var r = await db_patch(ROOT + "/" + code, body)
 		if r["code"] == 200:
@@ -348,14 +348,14 @@ func save_game(data: Dictionary, code := "") -> String:
 	var g := RandomNumberGenerator.new()
 	g.randomize()
 	for attempt in 6:
-		var c := code
+		var c = code
 		if c == "":
 			for k in 6:
 				c += CODE_LETTERS[g.randi() % CODE_LETTERS.length()]
 			var ex = await db_get(SAVES + "/" + c + "/uid")
 			if ex["code"] == 200 and ex["data"] != null and str(ex["data"]) != uid:
 				continue
-		var body := data.duplicate()
+		var body = data.duplicate()
 		body["uid"] = uid
 		var r = await db_put(SAVES + "/" + c, body)
 		if r["code"] == 200:

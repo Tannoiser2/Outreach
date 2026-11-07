@@ -13,13 +13,13 @@ var tutto_visibile := false
 var tex: Texture2D
 var gal: Texture2D
 var zoom := 0.3
-var pan := Vector2.ZERO
+var pan = Vector2.ZERO
 var selezionato := -1
 var bersagli := {}                 # esagono -> colore di evidenziazione
 var hover := -1
 var _drag := false
-var _drag_from := Vector2.ZERO
-var _press := Vector2.ZERO
+var _drag_from = Vector2.ZERO
+var _press = Vector2.ZERO
 var _moved := false
 var linee: Array = []              # [{da, a, col, t}]
 var lampi: Array = []              # [{h, col, t, r}]
@@ -51,7 +51,7 @@ func adatta() -> void:
 func centra_su(h: int, z := -1.0) -> void:
 	if z > 0:
 		zoom = z
-	var p := Grafica.centro_px(h, tex.get_width())
+	var p = Grafica.centro_px(h, tex.get_width())
 	pan = size / 2.0 - p * zoom
 	queue_redraw()
 
@@ -65,28 +65,28 @@ func rpx() -> float:
 
 
 func hex_at(p: Vector2) -> int:
-	var tp := (p - pan) / zoom
+	var tp = (p - pan) / zoom
 	var best := -1
-	var bd := 1e9
+	var bd = 1e9
 	var w := float(tex.get_width())
-	var r := Grafica.raggio_px(w)
+	var r = Grafica.raggio_px(w)
 	# stima della colonna e della riga, poi ricerca fra i vicini
 	var c0 := 0
 	var r0 := 0
 	if Grafica.usa_griglia():
-		var u := tp / (Grafica.GS * w / 4045.0) - Vector2(Grafica.GMX, Grafica.GMY)
+		var u = tp / (Grafica.GS * w / 4045.0) - Vector2(Grafica.GMX, Grafica.GMY)
 		c0 = int(round(u.x / 1.5)) + 1
 		r0 = int(round(u.y / sqrt(3.0))) + 1
 	else:
-		var k := w / 10000.0
+		var k = w / 10000.0
 		c0 = int(round((tp.x / k - Grafica.OX) / Grafica.OPX)) + 7
 		r0 = int(round((tp.y / k - Grafica.OY) / Grafica.OPY)) + 1
 	for c in range(c0 - 1, c0 + 2):
 		for rr in range(r0 - 1, r0 + 2):
-			var h := D.hx(c, rr)
+			var h = D.hx(c, rr)
 			if not D.esiste(h):
 				continue
-			var d := Grafica.centro_px(h, w).distance_to(tp)
+			var d = Grafica.centro_px(h, w).distance_to(tp)
 			if d < bd:
 				bd = d
 				best = h
@@ -97,7 +97,7 @@ func hex_at(p: Vector2) -> int:
 
 func _gui_input(ev: InputEvent) -> void:
 	if ev is InputEventMouseButton:
-		var mb := ev as InputEventMouseButton
+		var mb = ev as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
 			_zoom_at(mb.position, 1.15)
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN and mb.pressed:
@@ -111,11 +111,11 @@ func _gui_input(ev: InputEvent) -> void:
 			else:
 				_drag = false
 				if mb.button_index == MOUSE_BUTTON_LEFT and not _moved:
-					var h := hex_at(mb.position)
+					var h = hex_at(mb.position)
 					if h > 0:
 						hex_clicked.emit(h)
 	elif ev is InputEventMouseMotion:
-		var mm := ev as InputEventMouseMotion
+		var mm = ev as InputEventMouseMotion
 		if _drag:
 			if mm.position.distance_to(_press) > 6.0:
 				_moved = true
@@ -123,23 +123,23 @@ func _gui_input(ev: InputEvent) -> void:
 				pan += mm.position - _drag_from
 				_drag_from = mm.position
 				queue_redraw()
-		var h2 := hex_at(mm.position)
+		var h2 = hex_at(mm.position)
 		if h2 != hover:
 			hover = h2
 			hex_hovered.emit(h2)
 			queue_redraw()
 	elif ev is InputEventMagnifyGesture:
-		var mg := ev as InputEventMagnifyGesture
+		var mg = ev as InputEventMagnifyGesture
 		_zoom_at(mg.position, mg.factor)
 	elif ev is InputEventPanGesture:
-		var pg := ev as InputEventPanGesture
+		var pg = ev as InputEventPanGesture
 		pan -= pg.delta * 8.0
 		queue_redraw()
 
 
 func _zoom_at(p: Vector2, f: float) -> void:
 	var nz := clampf(zoom * f, 0.08, 2.5)
-	var tp := (p - pan) / zoom
+	var tp = (p - pan) / zoom
 	zoom = nz
 	pan = p - tp * zoom
 	queue_redraw()
@@ -193,8 +193,8 @@ func _draw() -> void:
 		draw_texture_rect(gal, Rect2(pan, tex.get_size() * zoom), false, Color(1, 1, 1, 0.42))
 	if eng == null:
 		return
-	var r := rpx()
-	var font := UI.font("numeri")
+	var r = rpx()
+	var font = UI.font("numeri")
 	var fs := int(clampf(r * 0.42, 9, 40))
 	# evidenziazioni
 	for h in bersagli:
@@ -202,42 +202,42 @@ func _draw() -> void:
 	if hover > 0:
 		_esagono(px(hover), r * 0.95, Color(1, 1, 1, 0.5), 1.5)
 	if selezionato > 0:
-		var pulse := 0.6 + 0.4 * sin(t * 5.0)
+		var pulse = 0.6 + 0.4 * sin(t * 5.0)
 		_esagono(px(selezionato), r * 0.95, Color(UI.AMBRA, pulse), 4.0)
 	# gettoni del potenziale
 	for h in eng.pv:
 		if eng.porte.has(h):
 			continue
-		var p := px(h) + Vector2(r * 0.42, -r * 0.42)
-		var s := r * 0.42
+		var p = px(h) + Vector2(r * 0.42, -r * 0.42)
+		var s = r * 0.42
 		draw_rect(Rect2(p - Vector2(s, s) / 2, Vector2(s, s)), Color(0.66, 0.68, 0.64))
 		draw_rect(Rect2(p - Vector2(s, s) / 2, Vector2(s, s)), Color(0.2, 0.2, 0.2), false, 1.0)
 		var v = eng.valore_pv(h) if tutto_visibile else (eng.pv_noto(h, vista) if vista >= 0 else -1)
-		var txt := str(v) if v >= 0 else "?"
+		var txt = str(v) if v >= 0 else "?"
 		draw_string(font, p + Vector2(-s * 0.5, s * 0.32), txt, HORIZONTAL_ALIGNMENT_CENTER, s, int(s * 0.8), Color(0.1, 0.1, 0.1))
 	# stelle faro scoperte
-	var tf := Grafica.tex("faro")
+	var tf = Grafica.tex("faro")
 	for h in eng.fari:
 		if D.faro_stampato(h) != "" and not Grafica.usa_griglia():
 			continue
-		var p2 := px(h) + Vector2(-r * 0.45, r * 0.4)
+		var p2 = px(h) + Vector2(-r * 0.45, r * 0.4)
 		if tf != null:
 			draw_texture_rect(tf, Rect2(p2 - Vector2(r, r) * 0.22, Vector2(r, r) * 0.44), false)
 		if Grafica.usa_griglia() and D.faro_stampato(h) != "" and zoom > 0.35:
 			draw_string(UI.font("serif"), px(h) + Vector2(-r, r * 0.85), D.faro_stampato(h), HORIZONTAL_ALIGNMENT_CENTER, r * 2, int(r * 0.22), Color(1, 0.45, 0.35))
 	# saggezza nel centro
-	var ts := Grafica.tex("saggezza")
+	var ts = Grafica.tex("saggezza")
 	for h in eng.sag_centro:
-		var p3 := px(h) + Vector2(r * 0.4, r * 0.35)
+		var p3 = px(h) + Vector2(r * 0.4, r * 0.35)
 		if ts != null:
 			draw_texture_rect(ts, Rect2(p3 - Vector2(r, r) * 0.2, Vector2(r, r) * 0.4), false)
 	# porte
 	for h in eng.porte:
 		var g: Dictionary = eng.porte[h]
-		var p4 := px(h) + Vector2(-r * 0.25, -r * 0.3)
-		var s4 := r * 0.62
+		var p4 = px(h) + Vector2(-r * 0.25, -r * 0.3)
+		var s4 = r * 0.62
 		var o := int(g.get("prima", g["o"])) if g["neut"] else int(g["o"])
-		var tg := Grafica.tex(Grafica.nome_porta(o))
+		var tg = Grafica.tex(Grafica.nome_porta(o))
 		var rect := Rect2(p4 - Vector2(s4, s4) / 2, Vector2(s4, s4))
 		if tg != null:
 			draw_texture_rect(tg, rect, false, Color(0.35, 0.35, 0.35) if g["neut"] else Color.WHITE)
@@ -252,9 +252,9 @@ func _draw() -> void:
 		var ps: Array = eng.proprietari(h)
 		var i := 0
 		for o in ps:
-			var p5 := px(h) + Vector2(r * 0.2 + i * r * 0.18, r * 0.05 + i * r * 0.18)
-			var s5 := r * 0.6
-			var tf2 := Grafica.tex(Grafica.nome_flotta(o))
+			var p5 = px(h) + Vector2(r * 0.2 + i * r * 0.18, r * 0.05 + i * r * 0.18)
+			var s5 = r * 0.6
+			var tf2 = Grafica.tex(Grafica.nome_flotta(o))
 			var rect2 := Rect2(p5 - Vector2(s5, s5) / 2, Vector2(s5, s5))
 			draw_rect(Rect2(rect2.position + Vector2(2, 3), rect2.size), Color(0, 0, 0, 0.5))
 			if tf2 != null:
@@ -269,7 +269,7 @@ func _draw() -> void:
 					var dett = "%dr %dd %de" % [st["r"], st["d"], st["e"]]
 					draw_string(font, rect2.position + Vector2(-s5 * 0.2, s5 + fs * 0.9), dett, HORIZONTAL_ALIGNMENT_CENTER, s5 * 1.4, int(fs * 0.7), Color(1, 1, 1, 0.9))
 				if not st["sag"].is_empty():
-					var tw := Grafica.tex("saggezza")
+					var tw = Grafica.tex("saggezza")
 					if tw != null:
 						draw_texture_rect(tw, Rect2(rect2.position + Vector2(-s5 * 0.3, -s5 * 0.3), Vector2(s5, s5) * 0.45), false)
 			i += 1
@@ -277,9 +277,9 @@ func _draw() -> void:
 	for h in eng.contatti:
 		var ps2: Array = eng.proprietari(h).filter(func(x): return x < 10)
 		var o2: int = ps2[0] if not ps2.is_empty() else 0
-		var tc := Grafica.tex(Grafica.nome_contatto(o2))
-		var p6 := px(h) + Vector2(-r * 0.5, r * 0.15)
-		var s6 := r * 0.42
+		var tc = Grafica.tex(Grafica.nome_contatto(o2))
+		var p6 = px(h) + Vector2(-r * 0.5, r * 0.15)
+		var s6 = r * 0.42
 		if tc != null:
 			draw_texture_rect(tc, Rect2(p6 - Vector2(s6, s6) / 2, Vector2(s6, s6)), false)
 		else:
@@ -314,8 +314,8 @@ func _vede_flotte(o: int) -> bool:
 
 
 func _etichetta(p: Vector2, testo: String, fs: int) -> void:
-	var font := UI.font("numeri")
-	var w := font.get_string_size(testo, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 6
+	var font = UI.font("numeri")
+	var w = font.get_string_size(testo, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 6
 	draw_rect(Rect2(p - Vector2(2, fs * 0.85), Vector2(w, fs * 1.05)), Color(0, 0, 0, 0.75))
 	draw_string(font, p + Vector2(1, 0), testo, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 0.92, 0.7))
 

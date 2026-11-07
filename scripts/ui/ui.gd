@@ -56,12 +56,12 @@ static func make_theme() -> Theme:
 	sb.content_margin_right = 12
 	sb.content_margin_top = 6
 	sb.content_margin_bottom = 6
-	var sbh := sb.duplicate()
+	var sbh = sb.duplicate()
 	sbh.bg_color = Color(0.2, 0.17, 0.12)
 	sbh.border_color = AMBRA
-	var sbp := sb.duplicate()
+	var sbp = sb.duplicate()
 	sbp.bg_color = Color(0.32, 0.22, 0.08)
-	var sbd := sb.duplicate()
+	var sbd = sb.duplicate()
 	sbd.bg_color = Color(0.08, 0.08, 0.1)
 	sbd.border_color = Color(0.3, 0.3, 0.3)
 	for c in ["Button", "OptionButton", "MenuButton"]:
@@ -114,7 +114,7 @@ static func make_theme() -> Theme:
 	tab.content_margin_right = 10
 	tab.content_margin_top = 4
 	tab.content_margin_bottom = 4
-	var tabs := tab.duplicate()
+	var tabs = tab.duplicate()
 	tabs.bg_color = Color(0.25, 0.18, 0.08)
 	t.set_stylebox("tab_unselected", "TabBar", tab)
 	t.set_stylebox("tab_selected", "TabBar", tabs)
@@ -201,13 +201,13 @@ class Starfield:
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), SPAZIO)
 		# una lieve nebulosa a spirale
-		var c := size * Vector2(0.72, 0.42)
+		var c = size * Vector2(0.72, 0.42)
 		for i in 60:
-			var a := i * 0.35 + t * 0.01
-			var r := 20.0 + i * 9.0
-			var p := c + Vector2(cos(a), sin(a) * 0.55) * r
+			var a = i * 0.35 + t * 0.01
+			var r = 20.0 + i * 9.0
+			var p = c + Vector2(cos(a), sin(a) * 0.55) * r
 			draw_circle(p, 60.0 + i * 1.5, Color(0.55, 0.32, 0.18, 0.012))
-			var p2 := c + Vector2(cos(a + PI), sin(a + PI) * 0.55) * r
+			var p2 = c + Vector2(cos(a + PI), sin(a + PI) * 0.55) * r
 			draw_circle(p2, 60.0 + i * 1.5, Color(0.25, 0.35, 0.55, 0.012))
 		draw_circle(c, 90.0, Color(0.95, 0.6, 0.3, 0.05))
 		for s in stelle:

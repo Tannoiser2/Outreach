@@ -7,7 +7,7 @@ var main
 static func md_bb(t: String) -> String:
 	var out := []
 	for ln in t.split("\n"):
-		var l := ln
+		var l = ln
 		if l.begins_with("### "):
 			l = "[font_size=20][color=#dcae38][b]%s[/b][/color][/font_size]" % l.substr(4)
 		elif l.begins_with("## "):
@@ -30,9 +30,9 @@ static func md_bb(t: String) -> String:
 
 
 static func testo_regole() -> RichTextLabel:
-	var f := FileAccess.open("res://assets/regole.md", FileAccess.READ)
-	var t := f.get_as_text() if f != null else "Regolamento non trovato."
-	var r := UI.rich(md_bb(t), 18)
+	var f = FileAccess.open("res://assets/regole.md", FileAccess.READ)
+	var t = f.get_as_text() if f != null else "Regolamento non trovato."
+	var r = UI.rich(md_bb(t), 18)
 	r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	r.custom_minimum_size = Vector2(1200, 0)
 	return r
@@ -50,7 +50,7 @@ func _ready() -> void:
 	var v := VBoxContainer.new()
 	p.add_child(v)
 	var h := HBoxContainer.new()
-	var t := UI.titolo("Regole di Outreach", 32)
+	var t = UI.titolo("Regole di Outreach", 32)
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(t)
 	h.add_child(UI.bottone("Torna al menu", func(): main.show_menu()))
@@ -61,7 +61,7 @@ func _ready() -> void:
 	var s1 := ScrollContainer.new()
 	s1.name = "Regolamento"
 	s1.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var r := testo_regole()
+	var r = testo_regole()
 	s1.add_child(r)
 	tabs.add_child(s1)
 	var s2 := ScrollContainer.new()

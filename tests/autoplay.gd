@@ -4,7 +4,7 @@ extends SceneTree
 ## opzioni: originali | skygazer | v3 | gilham | rivisto
 
 func _init() -> void:
-	var args := OS.get_cmdline_user_args()
+	var args = OS.get_cmdline_user_args()
 	var scns = [1, 2, 3, 4, 5]
 	var seeds = [1, 2]
 	var varianti = ["originali", "v3", "gilham"]
@@ -29,7 +29,7 @@ func _init() -> void:
 				var seats := []
 				for i in n:
 					seats.append({"name": "IA", "ai": true, "level": 1})
-				var opz := {"tabelle": "originali", "limite": 40}
+				var opz = {"tabelle": "originali", "limite": 40}
 				match v:
 					"skygazer", "v3":
 						opz["tabelle"] = v
@@ -40,9 +40,9 @@ func _init() -> void:
 						opz["fato_rivisto"] = true
 				e.setup({"scenario": s, "seed": sd, "seats": seats, "opzioni": opz, "max_turni": int(OS.get_environment("MAXT")) if OS.get_environment("MAXT") != "" else 30})
 				root.add_child(e)
-				var t0 := Time.get_ticks_msec()
+				var t0 = Time.get_ticks_msec()
 				await e.run()
-				var dt := Time.get_ticks_msec() - t0
+				var dt = Time.get_ticks_msec() - t0
 				var info := []
 				for i in e.players.size():
 					var t: Dictionary = e.totale_flotte(i)

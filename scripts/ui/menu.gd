@@ -8,7 +8,7 @@ var main
 var scenario := 1
 var n_seme := 3
 var posti: Array = []
-var opz := {"tabelle": "originali", "fato_rivisto": false, "conv_rivista": false, "gilham": false, "limite": 0}
+var opz = {"tabelle": "originali", "fato_rivisto": false, "conv_rivista": false, "gilham": false, "limite": 0}
 var stile := "originale"
 var velocita := 1
 var corpo: VBoxContainer
@@ -43,7 +43,7 @@ func _ready() -> void:
 	sx.custom_minimum_size = Vector2(420, 0)
 	sx.add_theme_constant_override("separation", 14)
 	h.add_child(sx)
-	var logo := UI.titolo("OUTREACH", 92)
+	var logo = UI.titolo("OUTREACH", 92)
 	sx.add_child(logo)
 	sx.add_child(UI.label("La conquista della Galassia, 3000 d.C.", 24, UI.ORO, "intestazione"))
 	sx.add_child(UI.label("Simulations Publications, 1976 - versione digitale", 15, UI.TENUE))
@@ -107,7 +107,7 @@ func _nomi_lati() -> Array:
 
 
 func _sistema_posti() -> void:
-	var n := _n_lati()
+	var n = _n_lati()
 	while posti.size() < n:
 		posti.append({"name": "", "ai": posti.size() > 0})
 	while posti.size() > n:
@@ -159,7 +159,7 @@ func _mostra_nuova() -> void:
 		r.add_child(sl)
 		corpo.add_child(r)
 	corpo.add_child(UI.intestazione("Giocatori", 22))
-	var nomi := _nomi_lati()
+	var nomi = _nomi_lati()
 	for i in _n_lati():
 		var r2 := HBoxContainer.new()
 		r2.add_theme_constant_override("separation", 10)
@@ -184,7 +184,7 @@ func _mostra_nuova() -> void:
 		r2.add_child(le)
 		corpo.add_child(r2)
 	_opzioni(corpo)
-	var go := UI.bottone("Inizia la partita", _inizia, 24)
+	var go = UI.bottone("Inizia la partita", _inizia, 24)
 	go.custom_minimum_size = Vector2(320, 60)
 	corpo.add_child(go)
 
@@ -254,7 +254,7 @@ func _mostra_carica() -> void:
 
 
 func _carica() -> void:
-	var c := load_code.text.strip_edges().to_upper()
+	var c = load_code.text.strip_edges().to_upper()
 	if c.length() != 6:
 		_say("Il codice ha sei lettere.")
 		return
@@ -314,7 +314,7 @@ func _mostra_online() -> void:
 
 
 func _crea() -> void:
-	var nm := on_name.text.strip_edges()
+	var nm = on_name.text.strip_edges()
 	if nm == "":
 		_say("Scrivi il tuo nome.")
 		return
@@ -339,8 +339,8 @@ func _crea() -> void:
 
 
 func _entra() -> void:
-	var code := on_code.text.strip_edges().to_upper()
-	var nm := on_name.text.strip_edges()
+	var code = on_code.text.strip_edges().to_upper()
+	var nm = on_name.text.strip_edges()
 	if nm == "" or code.length() != 4:
 		_say("Scrivi il tuo nome e il codice di 4 lettere.")
 		return
@@ -369,7 +369,7 @@ func _entra() -> void:
 func _posti_testo(room: Dictionary) -> String:
 	var sd = Net._as_dict(room.get("seats", {}))
 	var out := []
-	var nomi := _nomi_lati()
+	var nomi = _nomi_lati()
 	for i in nomi.size():
 		var k := str(i)
 		if sd.has(k) and sd[k] is Dictionary:
@@ -408,7 +408,7 @@ func _avvia() -> void:
 		main.lobby = {}
 		return
 	var sd = Net._as_dict(room.get("seats", {}))
-	var cfg := _config()
+	var cfg = _config()
 	for i in cfg["seats"].size():
 		var k := str(i)
 		if sd.has(k) and sd[k] is Dictionary:
@@ -416,7 +416,7 @@ func _avvia() -> void:
 			cfg["seats"][i]["ai"] = false
 		else:
 			cfg["seats"][i]["ai"] = true
-	var g := {"cfg": var_to_str(cfg)}
+	var g = {"cfg": var_to_str(cfg)}
 	if not await net.start_room(code, g):
 		_say("Non riesco ad avviare la partita (%s)." % net.last_error)
 		return

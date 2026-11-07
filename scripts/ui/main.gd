@@ -41,7 +41,7 @@ func _clear() -> void:
 func show_menu() -> void:
 	_clear()
 	stars.visible = true
-	var m := preload("res://scripts/ui/menu.gd").new()
+	var m = preload("res://scripts/ui/menu.gd").new()
 	m.main = self
 	add_child(m)
 	current = m
@@ -50,7 +50,7 @@ func show_menu() -> void:
 func start_game(config: Dictionary) -> void:
 	_clear()
 	stars.visible = false
-	var g := preload("res://scripts/ui/game_view.gd").new()
+	var g = preload("res://scripts/ui/game_view.gd").new()
 	g.main = self
 	g.config = config
 	add_child(g)
@@ -60,7 +60,7 @@ func start_game(config: Dictionary) -> void:
 func show_rules() -> void:
 	_clear()
 	stars.visible = true
-	var t := preload("res://scripts/ui/rules_view.gd").new()
+	var t = preload("res://scripts/ui/rules_view.gd").new()
 	t.main = self
 	add_child(t)
 	current = t

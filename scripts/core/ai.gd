@@ -48,7 +48,7 @@ func decide(eng, s: int, req: Dictionary):
 # ---------------------------------------------------------------- movimento
 
 func _mossa(eng, s: int, req: Dictionary) -> Dictionary:
-	var fase := "riserva" if req.get("riserva", false) else "regolari"
+	var fase = "riserva" if req.get("riserva", false) else "regolari"
 	if piano_turno != eng.turn or piano_fase != fase:
 		piano_turno = eng.turn
 		piano_fase = fase
@@ -63,7 +63,7 @@ func _mossa(eng, s: int, req: Dictionary) -> Dictionary:
 			continue
 		if eng.mossa_valida(s, int(m["da"]), int(m["a"]), fl, fase == "riserva") != "":
 			continue
-		var out := fl.duplicate()
+		var out = fl.duplicate()
 		out["da"] = int(m["da"])
 		out["a"] = int(m["a"])
 		out["sag"] = int(m.get("sag", 0))
@@ -75,7 +75,7 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 	var out := []
 	var raggio: int = maxi(1, eng.clr(s))
 	var mete := {}
-	var minacce := _minacce(eng, s)
+	var minacce = _minacce(eng, s)
 	var p: Dictionary = eng.players[s]
 	for h in eng.forze_libere(s):
 		var lib: Dictionary = eng.liberi(h, s)
@@ -105,7 +105,7 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 			if dest2 > 0:
 				out.append({"da": h, "a": dest2, "r": lib["r"], "d": lib["d"], "e": lib["e"]})
 				continue
-		var tenere := {"r": 0, "d": 0, "e": 0}
+		var tenere = {"r": 0, "d": 0, "e": 0}
 		# 3. chi sta su un esagono da esplorare resta (se ha esploratrici o è numeroso)
 		var pvn: int = eng.pv_noto(h, s)
 		var porta: Dictionary = eng.porta(h)
@@ -132,7 +132,7 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 		var mov = {"r": int(lib["r"]) - int(tenere["r"]), "d": int(lib["d"]) - int(tenere["d"]), "e": int(lib["e"]) - int(tenere["e"])}
 		if mov["r"] + mov["d"] + mov["e"] <= 0:
 			continue
-		var meta := _meta(eng, s, h, mov, raggio, mete)
+		var meta = _meta(eng, s, h, mov, raggio, mete)
 		if meta > 0:
 			mete[meta] = true
 			out.append({"da": h, "a": meta, "r": mov["r"], "d": mov["d"], "e": mov["e"]})
@@ -160,14 +160,14 @@ func _meta(eng, s: int, h: int, fl: Dictionary, raggio: int, mete: Dictionary) -
 	var portata := mini(raggio, 4)
 	if da_porta:
 		portata = maxi(portata, 3)
-	var c0 := D.col(h)
-	var r0 := D.row(h)
+	var c0 = D.col(h)
+	var r0 = D.row(h)
 	for c in range(c0 - portata, c0 + portata + 1):
 		for r in range(r0 - portata, r0 + portata + 1):
-			var x := D.hx(c, r)
+			var x = D.hx(c, r)
 			if x == h or not D.esiste(x) or D.nucleo(x):
 				continue
-			var dist := D.distanza(h, x)
+			var dist = D.distanza(h, x)
 			if dist > portata:
 				continue
 			if eng.mossa_valida(s, h, x, fl) != "":
@@ -176,7 +176,7 @@ func _meta(eng, s: int, h: int, fl: Dictionary, raggio: int, mete: Dictionary) -
 			if int(ri["rischio"]) >= 3:
 				continue
 			var v := 0.0
-			var t := D.terreno(x)
+			var t = D.terreno(x)
 			var g: Dictionary = eng.porta(x)
 			var nota: int = eng.pv_noto(x, s)
 			if not g.is_empty():
@@ -251,7 +251,7 @@ func _contatto(eng, s: int, req: Dictionary) -> Dictionary:
 func _interazione(eng, s: int, req: Dictionary) -> Dictionary:
 	var out := {}
 	var p: Dictionary = eng.players[s]
-	var miaf := _forza(eng, s)
+	var miaf = _forza(eng, s)
 	for o in req["parti"]:
 		var loro := str(req["loro"].get(o, ""))
 		var attuale := str(req["attuali"].get(o, ""))
@@ -261,7 +261,7 @@ func _interazione(eng, s: int, req: Dictionary) -> Dictionary:
 			if loro == "C" and miaf < _forza(eng, o):
 				v = "A"
 		else:
-			var lorof := _forza(eng, o)
+			var lorof = _forza(eng, o)
 			if loro == "C":
 				v = "C"
 			elif p["guardiani"]:
@@ -289,7 +289,7 @@ func _attacco(eng, s: int, req: Dictionary) -> Dictionary:
 		if best == 0 or stima < best:
 			best = stima
 	var att: bool = req.get("obbligatorio", false) or (vera >= best * 1.3 and vera > 0)
-	var dich := vera
+	var dich = vera
 	if rng.randf() < 0.5:
 		dich = int(round(vera * rng.randf_range(0.7, 1.3)))
 	return {"attacca": att, "dich": dich}
@@ -298,7 +298,7 @@ func _attacco(eng, s: int, req: Dictionary) -> Dictionary:
 func _bersaglio(eng, s: int, req: Dictionary) -> int:
 	var h := int(req["h"])
 	var best: int = req["bersagli"][0]
-	var bv := 1 << 30
+	var bv = 1 << 30
 	for t in req["bersagli"]:
 		var v: int = eng.n_flotte(h, t)
 		if v < bv:
@@ -347,16 +347,16 @@ func _fato(eng, s: int, req: Dictionary) -> Dictionary:
 	var sag_disp := int(req["sag"])
 	var p: Dictionary = eng.players[s]
 	var x4: bool = p["x"] and str(eng.sc.get("x_regola", "")) == "4"
-	var best := {"piu": 0, "sx": 0, "sag": 0}
-	var bv := -1e9
+	var best = {"piu": 0, "sx": 0, "sag": 0}
+	var bv = -1e9
 	for sagu in range(0, mini(2, sag_disp) + 1):
-		var sag_val := sagu + (1 if x4 else 0)
+		var sag_val = sagu + (1 if x4 else 0)
 		for piu in range(0, 0 if gil else 3):
 			for sx in range(0, col0 + 1):
-				var costo := piu * 50 + sx * 5
+				var costo = piu * 50 + sx * 5
 				if costo > rp:
 					continue
-				var col := col0 - sx
+				var col = col0 - sx
 				var ev := 0.0
 				for d in range(1, 7):
 					var t := mini(d + piu, 8)
@@ -430,7 +430,7 @@ func _risorse(eng, s: int, rp: int) -> Array:
 	# 4. costruire flotte
 	var riserva = 6 if not eng.opz.get("gilham", false) else 0
 	var tot: Dictionary = eng.totale_flotte(s)
-	var minacciato := not _minacce(eng, s).is_empty()
+	var minacciato = not _minacce(eng, s).is_empty()
 	var porte_ok: Array = eng.porte_di(s).filter(func(h): return int(eng.porte[h]["sp"]) > 0)
 	porte_ok.sort_custom(func(a, b): return int(eng.porte[a]["sp"]) > int(eng.porte[b]["sp"]))
 	var giri := 0
@@ -441,12 +441,12 @@ func _risorse(eng, s: int, rp: int) -> Array:
 			if int(stato["rp"]) <= riserva:
 				break
 			var tipo := "r"
-			var t := D.terreno(h)
+			var t = D.terreno(h)
 			if t == "A" and int(tot["e"]) < 2 + eng.punti_sistema(s) / 15 and not p["guardiani"]:
 				tipo = "e"
 			elif (t == "A" or t == "F") and (minacciato or p["guardiani"] or (int(tot["d"]) * 4 < int(tot["r"]) and int(stato["rp"]) >= 16)):
 				tipo = "d"
-			var a := {"t": "flotta", "h": h, "k": tipo, "n": 1}
+			var a = {"t": "flotta", "h": h, "k": tipo, "n": 1}
 			if int(stato["rp"]) - D.COSTO[tipo] < riserva - 3:
 				a["k"] = "r"
 			if prova.call(a):
@@ -472,7 +472,7 @@ func _schieramento(eng, s: int, budget: int) -> Array:
 		giri += 1
 		var h: int = mie[i % mie.size()]
 		i += 1
-		var t := D.terreno(h)
+		var t = D.terreno(h)
 		var k := "r"
 		if t == "A" and esp < 2 and spesi + 5 <= budget:
 			k = "e"

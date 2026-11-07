@@ -74,7 +74,7 @@ func setup(cfg: Dictionary) -> void:
 	opz = cfg.get("opzioni", {}).duplicate()
 	rng.seed = int(cfg.get("seed", 1))
 	var seats: Array = cfg.get("seats", [])
-	var n := seats.size()
+	var n = seats.size()
 	if int(sc["giocatori"]) > 0:
 		n = int(sc["giocatori"])
 	players.clear()
@@ -86,7 +86,7 @@ func setup(cfg: Dictionary) -> void:
 			"k_usato": false, "fazione": "", "esplorati": {}, "porte_iniziali": [], "guardiani": false,
 			"limite_corazzate": false, "x": false}
 		players.append(p)
-		var a := preload("res://scripts/core/ai.gd").new()
+		var a = preload("res://scripts/core/ai.gd").new()
 		a.setup(int(cfg.get("seed", 1)) * 31 + i, p["level"])
 		ais.append(a)
 	for i in 4:
@@ -136,7 +136,7 @@ func setup(cfg: Dictionary) -> void:
 
 func _mescola(a: Array) -> void:
 	for i in range(a.size() - 1, 0, -1):
-		var j := rng.randi_range(0, i)
+		var j = rng.randi_range(0, i)
 		var t = a[i]
 		a[i] = a[j]
 		a[j] = t
@@ -211,7 +211,7 @@ func ignora(cosa: String, seat := -1) -> bool:
 # ================================================================ registro
 
 func log_msg(t: String, solo := -1, pubblico := "") -> void:
-	var e := {"t": t, "solo": solo, "pub": pubblico, "turno": turn}
+	var e = {"t": t, "solo": solo, "pub": pubblico, "turno": turn}
 	log_lines.append(e)
 	log_added.emit(e)
 
@@ -330,14 +330,14 @@ func stack(h: int, o: int) -> Dictionary:
 
 
 func n_flotte(h: int, o: int) -> int:
-	var s := stack(h, o)
+	var s = stack(h, o)
 	if s.is_empty():
 		return 0
 	return int(s["r"]) + int(s["d"]) + int(s["e"])
 
 
 func liberi(h: int, o: int) -> Dictionary:
-	var s := stack(h, o)
+	var s = stack(h, o)
 	if s.is_empty():
 		return {"r": 0, "d": 0, "e": 0}
 	var m: Dictionary = s["m"]
@@ -367,7 +367,7 @@ func _aggiungi(h: int, o: int, fl: Dictionary, mosse := false) -> void:
 
 ## Toglie flotte (prima quelle non mosse se libere=true).
 func _togli(h: int, o: int, fl: Dictionary, da_libere := true) -> void:
-	var s := stack(h, o)
+	var s = stack(h, o)
 	if s.is_empty():
 		return
 	for k in ["r", "d", "e"]:
@@ -380,7 +380,7 @@ func _togli(h: int, o: int, fl: Dictionary, da_libere := true) -> void:
 
 
 func _pulisci(h: int, o: int) -> void:
-	var s := stack(h, o)
+	var s = stack(h, o)
 	if s.is_empty():
 		return
 	if int(s["r"]) + int(s["d"]) + int(s["e"]) <= 0:
@@ -441,7 +441,7 @@ func clr(o: int) -> int:
 func cl_spostamento(o: int) -> int:
 	if o >= 10:
 		return int(aut[o - 10]["cl"])
-	var l := cl(o)
+	var l = cl(o)
 	if players[o]["x"] and str(sc.get("x_regola", "")) == "5":
 		l += 1
 	return l
@@ -463,19 +463,19 @@ func usa_porte(a: int, b: int) -> bool:
 		return true
 	if b < 0:
 		return false
-	var mio := opzione(a, b)
+	var mio = opzione(a, b)
 	return opzione(b, a) == "A" and (mio == "A" or mio == "B")
 
 
 func porta_utile(h: int, o: int) -> bool:
-	var g := porta(h)
+	var g = porta(h)
 	if g.is_empty() or g["neut"]:
 		return false
 	return usa_porte(o, int(g["o"]))
 
 
 func porta_propria(h: int, o: int) -> bool:
-	var g := porta(h)
+	var g = porta(h)
 	return not g.is_empty() and not g["neut"] and int(g["o"]) == o
 
 
@@ -485,8 +485,8 @@ func puo_attaccare(a: int, b: int) -> bool:
 		return false
 	if a >= 10 and b >= 10:
 		return false
-	var mio := opzione(a, b)
-	var suo := opzione(b, a)
+	var mio = opzione(a, b)
+	var suo = opzione(b, a)
 	if mio == "" or suo == "":
 		return false
 	if mio == "C":
@@ -500,7 +500,7 @@ func puo_attaccare(a: int, b: int) -> bool:
 func colonne_bonus(a: int, b: int) -> int:
 	if opzione(a, b) != "C":
 		return 0
-	var suo := opzione(b, a)
+	var suo = opzione(b, a)
 	if suo == "A":
 		return 2
 	if suo == "B":
@@ -537,17 +537,17 @@ func pv_noto(h: int, s: int) -> int:
 
 ## Potenziale di un esagono in cui c'è una porta (il gettone viene tolto quando la porta lo raggiunge).
 func potenziale(h: int) -> int:
-	var v := valore_pv(h)
+	var v = valore_pv(h)
 	if v >= 0:
 		return v
-	var g := porta(h)
+	var g = porta(h)
 	if not g.is_empty():
 		return int(g["sp"])
 	return 0
 
 
 func capacita(h: int, o: int) -> int:
-	var s := stack(h, o)
+	var s = stack(h, o)
 	if s.is_empty():
 		return 0
 	return int(s["r"]) + 2 * int(s["d"])
@@ -564,16 +564,16 @@ func vista_porta(h: int, o: int) -> bool:
 func esploratori_di(o: int) -> int:
 	var t := 0
 	for h in flotte:
-		var s := stack(h, o)
+		var s = stack(h, o)
 		if not s.is_empty():
 			t += int(s["e"])
 	return t
 
 
 func totale_flotte(o: int) -> Dictionary:
-	var t := {"r": 0, "d": 0, "e": 0}
+	var t = {"r": 0, "d": 0, "e": 0}
 	for h in flotte:
-		var s := stack(h, o)
+		var s = stack(h, o)
 		if not s.is_empty():
 			for k in ["r", "d", "e"]:
 				t[k] += int(s[k])
@@ -634,7 +634,7 @@ func _fine(r: Dictionary) -> void:
 
 
 func _snapshot() -> void:
-	var sn := {"turno": turn, "porte": porte.duplicate(true), "flotte": {}, "fari": fari.duplicate(), "contatti": contatti.duplicate()}
+	var sn = {"turno": turn, "porte": porte.duplicate(true), "flotte": {}, "fari": fari.duplicate(), "contatti": contatti.duplicate()}
 	for h in flotte:
 		sn["flotte"][h] = {}
 		for o in flotte[h]:
@@ -648,11 +648,11 @@ func _snapshot() -> void:
 
 func _ordine_spostamento() -> void:
 	phase = "ordine"
-	var vv := vivi()
+	var vv = vivi()
 	if vv.is_empty():
 		_fine({"winner": -1, "reason": "nessun giocatore rimasto"})
 		return
-	var candidati := vv.duplicate()
+	var candidati = vv.duplicate()
 	var primo := -1
 	while primo < 0:
 		var best := -1
@@ -670,9 +670,9 @@ func _ordine_spostamento() -> void:
 		else:
 			candidati = tied
 	ordine.clear()
-	var n := players.size()
+	var n = players.size()
 	for k in n:
-		var s := (primo + k) % n
+		var s = (primo + k) % n
 		if players[s]["vivo"]:
 			ordine.append(s)
 	if vv.size() > 1:
@@ -694,7 +694,7 @@ func _fase_spostamento() -> void:
 	phase = "autonomi"
 	await _muovi_autonomi()
 	phase = "riserva"
-	var rev := ordine.duplicate()
+	var rev = ordine.duplicate()
 	rev.reverse()
 	for s in rev:
 		if over or not players[s]["vivo"]:
@@ -706,7 +706,7 @@ func _fase_spostamento() -> void:
 func forze_libere(s: int) -> Array:
 	var out := []
 	for h in flotte:
-		var l := liberi(h, s)
+		var l = liberi(h, s)
 		if l["r"] + l["d"] + l["e"] > 0:
 			out.append(h)
 	out.sort()
@@ -720,10 +720,10 @@ func _spostamenti_giocatore(s: int, riserva: bool) -> void:
 		guard += 1
 		if riserva and fatti >= 1:
 			return
-		var libere := forze_libere(s)
+		var libere = forze_libere(s)
 		if libere.is_empty():
 			return
-		var req := {"type": "mossa", "riserva": riserva, "libere": libere}
+		var req = {"type": "mossa", "riserva": riserva, "libere": libere}
 		var r = await decide(s, req)
 		if r == null or not (r is Dictionary) or r.get("fine", false):
 			return
@@ -736,7 +736,7 @@ func _spostamenti_giocatore(s: int, riserva: bool) -> void:
 func mossa_valida(s: int, da: int, a: int, fl: Dictionary, riserva := false, prosegue := false) -> String:
 	if not D.esiste(a) or da == a:
 		return "destinazione non valida"
-	var l := liberi(da, s)
+	var l = liberi(da, s)
 	var n := 0
 	for k in ["r", "d", "e"]:
 		var q := int(fl.get(k, 0))
@@ -745,8 +745,8 @@ func mossa_valida(s: int, da: int, a: int, fl: Dictionary, riserva := false, pro
 		n += q
 	if n <= 0:
 		return "nessuna flotta scelta"
-	var dist := D.distanza(da, a)
-	var raggio := clr(s)
+	var dist = D.distanza(da, a)
+	var raggio = clr(s)
 	if riserva and dist > raggio:
 		return "lo spostamento di riserva non può superare il raggio di sicurezza (%d)" % raggio
 	if dist > raggio and not porta_utile(da, s):
@@ -770,7 +770,7 @@ func mod_dispersione(o: int, a: int, fl: Dictionary) -> int:
 		m += 2
 	elif e > 0:
 		m += 1
-	var l := cl_spostamento(o)
+	var l = cl_spostamento(o)
 	if l > 1:
 		m += l - 1
 	return m
@@ -787,16 +787,16 @@ func tabella_dispersione() -> Array:
 
 ## Probabilità di dispersione (per l'interfaccia): restituisce i risultati possibili per dado 1..6.
 func rischio(o: int, da: int, a: int, fl: Dictionary) -> Dictionary:
-	var dist := D.distanza(da, a)
+	var dist = D.distanza(da, a)
 	if dist <= 1:
 		return {"dist": dist, "rischio": 0, "mod": 0}
-	var m := mod_dispersione(o, a, fl)
-	var c := D.col_dispersione(dist)
-	var tab := tabella_dispersione()
+	var m = mod_dispersione(o, a, fl)
+	var c = D.col_dispersione(dist)
+	var tab = tabella_dispersione()
 	var cattivi := 0
 	var peggiore := ""
 	for d in range(1, 7):
-		var r := d + m
+		var r = d + m
 		if r <= 9 and str(tab[r - 1][c]) != "":
 			cattivi += 1
 			if peggiore == "":
@@ -809,15 +809,15 @@ func _esegui_mossa(s: int, r: Dictionary, riserva: bool) -> bool:
 	var da := int(r.get("da", 0))
 	var a := int(r.get("a", 0))
 	var fl = {"r": int(r.get("r", 0)), "d": int(r.get("d", 0)), "e": int(r.get("e", 0))}
-	var err := mossa_valida(s, da, a, fl, riserva)
+	var err = mossa_valida(s, da, a, fl, riserva)
 	if err != "":
 		log_msg("Spostamento rifiutato: " + err, s)
 		return false
 	# gettoni saggezza: quelli già trasportati vanno con la forza; si può prendere quello del centro
 	var carico: Array = []
-	var st := stack(da, s)
+	var st = stack(da, s)
 	if not st.is_empty() and not st["sag"].is_empty():
-		var tutte := liberi(da, s)
+		var tutte = liberi(da, s)
 		if fl["r"] + fl["d"] + fl["e"] >= tutte["r"] + tutte["d"] + tutte["e"] or r.get("sag", 0) > 0:
 			carico = st["sag"].duplicate()
 			st["sag"].clear()
@@ -828,9 +828,9 @@ func _esegui_mossa(s: int, r: Dictionary, riserva: bool) -> bool:
 		if not sag_pool.is_empty():
 			sag_centro[da] = sag_pool.pop_at(rng.randi_range(0, sag_pool.size() - 1))
 	_togli(da, s, fl)
-	var pos := da
-	var dest := a
-	var forza := fl
+	var pos = da
+	var dest = a
+	var forza = fl
 	var primo := true
 	while true:
 		var esito = await _salto(s, pos, dest, forza, carico)
@@ -843,17 +843,17 @@ func _esegui_mossa(s: int, r: Dictionary, riserva: bool) -> bool:
 		carico = []
 		if not puo_proseguire:
 			return true
-		var req := {"type": "prosegui", "da": pos, "forza": forza, "riserva": riserva}
+		var req = {"type": "prosegui", "da": pos, "forza": forza, "riserva": riserva}
 		var rr = await decide(s, req)
 		if rr == null or not (rr is Dictionary) or rr.get("fine", false) or not rr.has("a"):
 			return true
 		var nuovo := int(rr["a"])
-		var err2 := mossa_valida(s, pos, nuovo, forza, riserva, true)
+		var err2 = mossa_valida(s, pos, nuovo, forza, riserva, true)
 		if err2 != "":
 			log_msg("Proseguimento rifiutato: " + err2, s)
 			return true
 		# la forza riparte: si toglie dalla pila d'arrivo
-		var st2 := stack(pos, s)
+		var st2 = stack(pos, s)
 		if not st2.is_empty() and not st2["sag"].is_empty():
 			carico = st2["sag"].duplicate()
 			st2["sag"].clear()
@@ -865,26 +865,26 @@ func _esegui_mossa(s: int, r: Dictionary, riserva: bool) -> bool:
 
 ## Un singolo salto. Restituisce {"ok": arrivato dove voleva, "perso": forza eliminata, "h", "forza", "oltre"}.
 func _salto(o: int, da: int, a: int, forza: Dictionary, carico: Array) -> Dictionary:
-	var dist := D.distanza(da, a)
-	var raggio := clr(o)
-	var oltre := dist > raggio
-	var autonomo := o >= 10
+	var dist = D.distanza(da, a)
+	var raggio = clr(o)
+	var oltre = dist > raggio
+	var autonomo = o >= 10
 	var gil: bool = opz.get("gilham", false) and not autonomo
-	var esito := {"ok": true, "perso": false, "h": a, "forza": forza, "oltre": oltre}
+	var esito = {"ok": true, "perso": false, "h": a, "forza": forza, "oltre": oltre}
 	var desc = "%s: %d flotte da %s a %s (%d esagoni)" % [fazione(o), _n(forza), D.nome(da), D.nome(a), dist]
 	if dist >= 2:
-		var m := mod_dispersione(o, a, forza)
-		var d := dado()
-		var tot := d + m
-		var tab := tabella_dispersione()
+		var m = mod_dispersione(o, a, forza)
+		var d = dado()
+		var tot = d + m
+		var tab = tabella_dispersione()
 		var cella := ""
 		if tot <= 9:
 			cella = str(tab[tot - 1][D.col_dispersione(dist)])
 		if cella != "":
-			var parti := cella.split("/")
+			var parti = cella.split("/")
 			var sd := int(parti[0])
 			var perc := int(parti[1])
-			var n := _n(forza)
+			var n = _n(forza)
 			var persi := 0
 			if not autonomo:
 				persi = D.perdite(n, perc, opz.get("conv_rivista", false))
@@ -903,8 +903,8 @@ func _salto(o: int, da: int, a: int, forza: Dictionary, carico: Array) -> Dictio
 				else:
 					mosse_turno.append({"o": o, "da": da, "a": a})
 				return esito
-			var dir := dado()
-			var finale := D.passo(a, dir, sd)
+			var dir = dado()
+			var finale = D.passo(a, dir, sd)
 			esito["ok"] = false
 			var motivo := ""
 			if _n(forza) <= 0:
@@ -954,7 +954,7 @@ func _n(fl: Dictionary) -> int:
 
 ## Toglie n flotte da una forza secondo la preferenza: prima regolari, poi esploratrici, poi corazzate.
 func _perdi(fl: Dictionary, n: int, o: int) -> Dictionary:
-	var out := fl.duplicate()
+	var out = fl.duplicate()
 	var ordine_perdite = ["r", "e", "d"]
 	if o >= 0 and o < 10 and players[o].get("perdite", "") == "esploratrici":
 		ordine_perdite = ["e", "r", "d"]
@@ -994,7 +994,7 @@ func _atterra(o: int, h: int, forza: Dictionary, carico: Array) -> void:
 				p["sag"].append(c)
 				log_msg("%s porta un gettone saggezza a una porta amica (ora ne controlla %d)." % [fazione(o), p["sag"].size()])
 	else:
-		var st := stack(h, o)
+		var st = stack(h, o)
 		if not st.is_empty():
 			st["sag"].append_array(carico)
 
@@ -1012,18 +1012,18 @@ func _prendi_x(o: int) -> void:
 
 ## Stelle faro scoperte (15.1): 1d6+2 nuove stelle in esagoni visibili dalla forza.
 func _scopri_fari(h: int, o: int, annuncia: bool) -> void:
-	var n := dado() + 2
+	var n = dado() + 2
 	var cand := []
-	var r0 := D.row(h)
-	var c0 := D.col(h)
+	var r0 = D.row(h)
+	var c0 = D.col(h)
 	for c in range(c0 - 8, c0 + 9):
 		for rr in range(r0 - 6, r0 + 7):
-			var x := D.hx(c, rr)
+			var x = D.hx(c, rr)
 			if not D.esiste(x) or x == h or fari.has(x) or D.nucleo(x):
 				continue
 			if D.col(x) == c0 or D.row(x) == r0:
 				continue
-			var dd := D.distanza(h, x)
+			var dd = D.distanza(h, x)
 			if dd < 2 or dd > 8:
 				continue
 			if not D.vista(h, x):
@@ -1047,8 +1047,8 @@ func _muovi_autonomi() -> void:
 		var A: Dictionary = aut[i]
 		if not A["presente"] or not A["attiva"]:
 			continue
-		var o := 10 + i
-		var mie := porte_di(o)
+		var o = 10 + i
+		var mie = porte_di(o)
 		var ostili := []
 		for s in vivi():
 			if opzione(o, s) == "C":
@@ -1064,7 +1064,7 @@ func _muovi_autonomi() -> void:
 			for h in pile:
 				if porta_propria(h, o):
 					continue
-				var best := _porta_vicina(h, mie)
+				var best = _porta_vicina(h, mie)
 				if best > 0:
 					var fl: Dictionary = liberi(h, o)
 					_togli(h, o, fl)
@@ -1093,8 +1093,8 @@ func _muovi_autonomi() -> void:
 		var tot := 0
 		for h in pile:
 			tot += n_flotte(h, o)
-		var guardia := mie.size()
-		var eccesso := tot - guardia
+		var guardia = mie.size()
+		var eccesso = tot - guardia
 		if eccesso <= 0:
 			continue
 		var bersaglio := -1
@@ -1107,7 +1107,7 @@ func _muovi_autonomi() -> void:
 					continue
 				if not D.vista(h, g):
 					continue
-				var dd := D.distanza(h, g)
+				var dd = D.distanza(h, g)
 				if dd < bd:
 					bd = dd
 					bersaglio = g
@@ -1115,18 +1115,18 @@ func _muovi_autonomi() -> void:
 		if bersaglio < 0:
 			continue
 		# raccoglie l'eccesso dalle pile (le flotte in più rispetto a una per porta)
-		var forza := {"r": 0, "d": 0, "e": 0}
-		var da_prendere := eccesso
+		var forza = {"r": 0, "d": 0, "e": 0}
+		var da_prendere = eccesso
 		for h in pile:
 			if da_prendere <= 0:
 				break
-			var lib := liberi(h, o)
-			var tenere := 1 if porta_propria(h, o) else 0
-			var disp := _n(lib) - tenere
+			var lib = liberi(h, o)
+			var tenere = 1 if porta_propria(h, o) else 0
+			var disp = _n(lib) - tenere
 			if disp <= 0:
 				continue
 			var q := mini(disp, da_prendere)
-			var preso := {"r": 0, "d": 0, "e": 0}
+			var preso = {"r": 0, "d": 0, "e": 0}
 			for k in ["d", "r"]:
 				var x: int = mini(q, int(lib[k]))
 				preso[k] = x
@@ -1146,7 +1146,7 @@ func _porta_vicina(h: int, lista: Array) -> int:
 	var best := -1
 	var bd := 999
 	for g in lista:
-		var d := D.distanza(h, g)
+		var d = D.distanza(h, g)
 		if d < bd:
 			bd = d
 			best = g
@@ -1177,7 +1177,7 @@ func _fase_esplorazione() -> void:
 	for s in ordine:
 		if not players[s]["vivo"]:
 			continue
-		var es := esplorabili(s)
+		var es = esplorabili(s)
 		if es.is_empty():
 			continue
 		var r = await decide(s, {"type": "esplora", "esagoni": es})
@@ -1188,10 +1188,10 @@ func _fase_esplorazione() -> void:
 			if not (h in es):
 				continue
 			esplorati_turno[s].append(h)
-			var st := stack(h, s)
+			var st = stack(h, s)
 			var n = 2 * int(st["e"]) + int(st["r"]) + int(st["d"])
-			var col := D.col_esplorazione(n)
-			var d := dado()
+			var col = D.col_esplorazione(n)
+			var d = dado()
 			if d <= col + 1:
 				_esplora_riuscita(s, h)
 			else:
@@ -1209,18 +1209,18 @@ func _esplora_riuscita(s: int, h: int) -> void:
 			pv[h] = {"c": pv_pool.pop_back(), "v": 0, "visto": {}}
 	pv[h]["visto"][s] = true
 	p["esplorati"][h] = true
-	var v := valore_pv(h)
+	var v = valore_pv(h)
 	log_msg("%s esplora %s: potenziale %d." % [fazione(s), D.nome(h), v], s, "%s esplora %s." % [fazione(s), D.nome(h)])
 	fx.emit("esplora", {"o": s, "h": h})
 	if opz.get("gilham", false):
-		var pc := rng.randi_range(1, 100)
+		var pc = rng.randi_range(1, 100)
 		if pc < 100:
 			var guadagno := int(v * 10 / maxi(1, cl(s)))
 			p["cp"] = int(p["cp"]) + guadagno
 			if guadagno > 0:
 				log_msg("%s guadagna %d punti civiltà dall'esplorazione." % [fazione(s), guadagno], s)
 		else:
-			var r20 := rng.randi_range(1, 20)
+			var r20 = rng.randi_range(1, 20)
 			var ris := "W"
 			if r20 <= 4: ris = "G"
 			elif r20 <= 7: ris = "H"
@@ -1246,7 +1246,7 @@ func _gil_saggezza(s: int, h: int) -> void:
 		if sc.get("x_perde", false):
 			_fine({"winner": -1, "reason": "il gettone X: il Nucleo è esploso, partita persa", "perso": s})
 			return
-	var pc := rng.randi_range(1, 100)
+	var pc = rng.randi_range(1, 100)
 	var g := 80
 	if pc == 100: g = 10000
 	elif pc >= 91: g = 5000
@@ -1264,8 +1264,8 @@ func _gil_saggezza(s: int, h: int) -> void:
 # ================================================================ D1. contatto
 
 func gruppi(h: int) -> Array:
-	var out := proprietari(h)
-	var g := porta(h)
+	var out = proprietari(h)
+	var g = porta(h)
 	if not g.is_empty() and not g["neut"] and not (int(g["o"]) in out):
 		out.append(int(g["o"]))
 	out.sort()
@@ -1296,7 +1296,7 @@ func _solo_autonomi(gs: Array) -> bool:
 func casi_contatto() -> Array:
 	var out := []
 	for h in _esagoni_occupati():
-		var gs := gruppi(h)
+		var gs = gruppi(h)
 		if gs.size() < 2 or _solo_autonomi(gs):
 			continue
 		if _tutti_alleati(gs):
@@ -1315,13 +1315,13 @@ func _esagoni_occupati() -> Array:
 	for h in porte:
 		if not porte[h]["neut"]:
 			hs[h] = true
-	var out := hs.keys()
+	var out = hs.keys()
 	out.sort()
 	return out
 
 
 func indice_max(h: int, o: int) -> int:
-	var s := stack(h, o)
+	var s = stack(h, o)
 	var t := 0
 	if not s.is_empty():
 		t = int(s["e"]) + int(s["r"]) + int(s["d"]) + int(s["e"])
@@ -1340,13 +1340,13 @@ func _segmento_contatto() -> void:
 	phase = "contatto"
 	# i segnalini restano dove ci sono ancora parti non alleate
 	for h in contatti.keys():
-		var gs := gruppi(h)
+		var gs = gruppi(h)
 		if gs.size() < 2 or _tutti_alleati(gs) or _solo_autonomi(gs):
 			contatti.erase(h)
-	var casi := casi_contatto()
+	var casi = casi_contatto()
 	# 7.25: catena di alleanze A-B, B-C con A e C non alleati: contatto automatico
 	for h in casi.duplicate():
-		var gs := gruppi(h)
+		var gs = gruppi(h)
 		if gs.size() >= 3:
 			var catena := false
 			for x in gs:
@@ -1391,8 +1391,8 @@ func _segmento_contatto() -> void:
 			else:
 				var rs: Dictionary = risposte.get(o, {})
 				idx = clampi(int(rs.get(h, rs.get(str(h), indice_max(h, o)))), indice_min(h, o), indice_max(h, o))
-			var d := dado()
-			var ok := d <= D.col_contatto(idx)
+			var d = dado()
+			var ok = d <= D.col_contatto(idx)
 			dettagli.append("%s indice %d dado %d" % [fazione(o), idx, d])
 			if ok:
 				c = true
@@ -1410,7 +1410,7 @@ func _segmento_contatto() -> void:
 func in_contatto(s: int) -> Array:
 	var out := {}
 	for h in _esagoni_occupati():
-		var gs := gruppi(h)
+		var gs = gruppi(h)
 		if not (s in gs):
 			continue
 		for o in gs:
@@ -1418,7 +1418,7 @@ func in_contatto(s: int) -> Array:
 				continue
 			if contatti.has(h) or alleati(s, o):
 				out[o] = true
-	var k := out.keys()
+	var k = out.keys()
 	k.sort()
 	return k
 
@@ -1431,7 +1431,7 @@ func _segmento_interazione() -> void:
 	var seats := []
 	var reqs := []
 	for s in vivi():
-		var parti := in_contatto(s)
+		var parti = in_contatto(s)
 		if parti.is_empty():
 			continue
 		var attuali := {}
@@ -1449,7 +1449,7 @@ func _segmento_interazione() -> void:
 			var r = rr[i]
 			var scelte: Dictionary = r if r is Dictionary else {}
 			for o in reqs[i]["parti"]:
-				var prima := opzione(s, o)
+				var prima = opzione(s, o)
 				var v := str(scelte.get(o, scelte.get(str(o), prima if prima != "" else "B")))
 				if not (v in ["A", "B", "C"]):
 					v = "B"
@@ -1473,8 +1473,8 @@ func _segmento_interazione() -> void:
 			if A["custode"] < 0:
 				A["custode"] = s
 				log_msg("%s diventa custode della forza autonoma %s." % [fazione(s), D.COLORI_AUT[o - 10]])
-			var prima := opzione(o, s)
-			var nuova := prima
+			var prima = opzione(o, s)
+			var nuova = prima
 			if attaccati.has("%d:%d" % [o, s]):
 				nuova = "C"
 			elif prima == "":
@@ -1491,7 +1491,7 @@ func _segmento_interazione() -> void:
 				A["visti"][s] = true
 				var base: int = {1: 100, 2: 800}.get(int(A["cl"]), 100)
 				base = int(A.get("cp_val", base))
-				var g := base / maxi(1, cl(s))
+				var g = base / maxi(1, cl(s))
 				players[s]["cp"] = int(players[s]["cp"]) + g
 				log_msg("%s guadagna %d punti civiltà dal contatto con gli autonomi." % [fazione(s), g], s)
 	attaccati.clear()
@@ -1516,12 +1516,12 @@ func _loro(s: int, parti: Array) -> Dictionary:
 
 
 func _gil_trasferisci(donatore: int, ricevente: int) -> void:
-	var od := opzione(donatore, ricevente)
-	var orr := opzione(ricevente, donatore)
+	var od = opzione(donatore, ricevente)
+	var orr = opzione(ricevente, donatore)
 	if od == "" or orr == "" or od == "C":
 		return
 	var base := 0
-	var x := rng.randi_range(1, 10)
+	var x = rng.randi_range(1, 10)
 	if od == "A":
 		base = x * 100 if orr != "C" else x * 10
 	else:
@@ -1539,7 +1539,7 @@ func _gil_trasferisci(donatore: int, ricevente: int) -> void:
 
 func _segmento_conflitto() -> void:
 	phase = "conflitto"
-	var hs := contatti.keys()
+	var hs = contatti.keys()
 	hs.sort()
 	for h in hs:
 		if over:
@@ -1557,18 +1557,18 @@ func bersagli(h: int, o: int) -> Array:
 
 
 func _conflitto_in(h: int) -> void:
-	var parti := proprietari(h)
+	var parti = proprietari(h)
 	if parti.size() < 2:
 		return
 	var seats := []
 	var reqs := []
 	var dich := {}
 	for o in parti:
-		var bs := bersagli(h, o)
+		var bs = bersagli(h, o)
 		if bs.is_empty():
 			continue
 		if o >= 10:
-			var ostili := bs.filter(func(t): return opzione(o, t) == "C")
+			var ostili = bs.filter(func(t): return opzione(o, t) == "C")
 			if not ostili.is_empty():
 				dich[o] = capacita(h, o)
 			continue
@@ -1586,8 +1586,8 @@ func _conflitto_in(h: int) -> void:
 			var o: int = seats[i]
 			var r = rr[i]
 			var att: bool = reqs[i]["obbligatorio"]
-			var v := capacita(h, o)
-			var dv := v
+			var v = capacita(h, o)
+			var dv = v
 			if r is Dictionary:
 				att = att or bool(r.get("attacca", false))
 				dv = int(r.get("dich", v))
@@ -1597,7 +1597,7 @@ func _conflitto_in(h: int) -> void:
 				dich[o] = clampi(dv, lo, hi)
 	if dich.is_empty():
 		return
-	var chi := dich.keys()
+	var chi = dich.keys()
 	chi.sort_custom(func(a, b): return dich[a] > dich[b] or (dich[a] == dich[b] and _pos(a) < _pos(b)))
 	var dett := []
 	for o in chi:
@@ -1606,7 +1606,7 @@ func _conflitto_in(h: int) -> void:
 	for o in chi:
 		if n_flotte(h, o) <= 0 or capacita(h, o) <= 0:
 			continue
-		var bs := bersagli(h, o)
+		var bs = bersagli(h, o)
 		if o >= 10:
 			bs = bs.filter(func(t): return opzione(o, t) == "C")
 		if bs.is_empty():
@@ -1626,7 +1626,7 @@ func _conflitto_in(h: int) -> void:
 func _pos(o: int) -> int:
 	if o >= 10:
 		return 100 + o
-	var i := ordine.find(o)
+	var i = ordine.find(o)
 	return i if i >= 0 else 50
 
 
@@ -1637,29 +1637,29 @@ func tabella_conflitto() -> Array:
 
 
 func _attacco(h: int, a: int, d: int) -> void:
-	var ca := capacita(h, a)
-	var cd := capacita(h, d)
+	var ca = capacita(h, a)
+	var cd = capacita(h, d)
 	if cd <= 0:
 		cd = 1
 	var col := mini(6, D.col_conflitto(ca, cd) + colonne_bonus(a, d))
-	var sa := stack(h, a)
-	var sd := stack(h, d)
-	var dd := dado()
+	var sa = stack(h, a)
+	var sd = stack(h, d)
+	var dd = dado()
 	var mod := int(sa["d"]) - int(sd["d"])
 	var tiro := clampi(dd + mod, -2, 9)
 	var cella: String = tabella_conflitto()[tiro + 2][col]
-	var pp := cella.split("/")
+	var pp = cella.split("/")
 	var pa := int(pp[0])
 	var pd := int(pp[1])
 	var riv: bool = opz.get("conv_rivista", false) or str(opz.get("tabelle", "")) == "v3"
-	var na := n_flotte(h, a)
-	var nd := n_flotte(h, d)
-	var la := D.perdite(na, pa, riv)
-	var ld := D.perdite(nd, pd, riv)
+	var na = n_flotte(h, a)
+	var nd = n_flotte(h, d)
+	var la = D.perdite(na, pa, riv)
+	var ld = D.perdite(nd, pd, riv)
 	if obbligatorio(a, d):
 		ld = mini(nd, ld * 2)
-	var fa := _perdi(_comp(h, a), la, a)
-	var fd := _perdi(_comp(h, d), ld, d)
+	var fa = _perdi(_comp(h, a), la, a)
+	var fd = _perdi(_comp(h, d), ld, d)
 	if d >= 10:
 		fd = _perdi_autonomo(_comp(h, d), ld)
 	if a >= 10:
@@ -1684,17 +1684,17 @@ func _attacco(h: int, a: int, d: int) -> void:
 func _gil_combattimento(vincitore: int, perdente: int, n: int, _f: Dictionary) -> void:
 	if vincitore >= 10 or n <= 0:
 		return
-	var v := n * 3 * maxi(1, cl(perdente)) / maxi(1, cl(vincitore))
+	var v = n * 3 * maxi(1, cl(perdente)) / maxi(1, cl(vincitore))
 	players[vincitore]["cp"] = int(players[vincitore]["cp"]) + v
 
 
 func _comp(h: int, o: int) -> Dictionary:
-	var s := stack(h, o)
+	var s = stack(h, o)
 	return {"r": int(s.get("r", 0)), "d": int(s.get("d", 0)), "e": int(s.get("e", 0))}
 
 
 func _imposta(h: int, o: int, fl: Dictionary) -> void:
-	var s := stack(h, o)
+	var s = stack(h, o)
 	if s.is_empty():
 		return
 	for k in ["r", "d", "e"]:
@@ -1705,7 +1705,7 @@ func _imposta(h: int, o: int, fl: Dictionary) -> void:
 
 ## Le corazzate autonome si perdono per ultime (9.18).
 func _perdi_autonomo(fl: Dictionary, n: int) -> Dictionary:
-	var out := fl.duplicate()
+	var out = fl.duplicate()
 	for k in ["r", "e", "d"]:
 		var q: int = mini(n, int(out[k]))
 		out[k] = int(out[k]) - q
@@ -1717,10 +1717,10 @@ func _perdi_autonomo(fl: Dictionary, n: int) -> Dictionary:
 
 func _segmento_riduzione() -> void:
 	phase = "riduzione"
-	var hs := contatti.keys()
+	var hs = contatti.keys()
 	hs.sort()
 	for h in hs:
-		var g := porta(h)
+		var g = porta(h)
 		if g.is_empty() or g["neut"]:
 			continue
 		var prop := int(g["o"])
@@ -1755,8 +1755,8 @@ func _segmento_riduzione() -> void:
 			if porta(h).is_empty() or porta(h)["neut"]:
 				break
 			var diff = _cap_rid(h, o) - (int(g["sp"]) + cl(prop))
-			var col := D.col_riduzione(diff)
-			var dd := dado()
+			var col = D.col_riduzione(diff)
+			var dd = dado()
 			if col >= 0:
 				col = mini(4, col + colonne_bonus(o, prop))
 			if col >= 0 and dd <= col + 1:
@@ -1796,8 +1796,8 @@ func _controlla_autonomo(i: int) -> void:
 	var A: Dictionary = aut[i]
 	if not A["presente"]:
 		return
-	var o := 10 + i
-	var ha := not porte_di(o).is_empty()
+	var o = 10 + i
+	var ha = not porte_di(o).is_empty()
 	for h in flotte:
 		if n_flotte(h, o) > 0:
 			ha = true
@@ -1835,7 +1835,7 @@ func _controlla_eliminati() -> void:
 							ancora = true
 					if not ancora:
 						A["attiva"] = false
-	var vv := vivi()
+	var vv = vivi()
 	if vv.is_empty():
 		_fine({"winner": -1, "reason": "tutti i giocatori eliminati"})
 	elif vv.size() == 1 and players.size() > 1 and scn_id in [4, 5]:
@@ -1863,9 +1863,9 @@ func tabella_fato() -> Array:
 
 func _fato_giocatore(s: int) -> void:
 	var p: Dictionary = players[s]
-	var sp := punti_sistema(s)
+	var sp = punti_sistema(s)
 	var gil: bool = opz.get("gilham", false)
-	var col0 := D.col_fato_gilham(sp) if gil else D.col_fato(sp)
+	var col0 = D.col_fato_gilham(sp) if gil else D.col_fato(sp)
 	var req = {"type": "fato", "sp": sp, "rp": int(p["rp"]), "sag": p["sag"].size(), "colonna": col0, "gilham": gil}
 	var r = await decide(s, req)
 	var piu := 0
@@ -1877,7 +1877,7 @@ func _fato_giocatore(s: int) -> void:
 		spesi = clampi(int(r.get("sag", 0)), 0, p["sag"].size())
 	if gil:
 		piu = 0
-	var costo := piu * 50 + sx * 5
+	var costo = piu * 50 + sx * 5
 	while costo > int(p["rp"]):
 		if sx > 0:
 			sx -= 1
@@ -1889,17 +1889,17 @@ func _fato_giocatore(s: int) -> void:
 	var x5: bool = p["x"] and str(sc.get("x_regola", "")) == "5"
 	if x5:
 		spesi = 0
-	var sag_val := spesi
+	var sag_val = spesi
 	if p["x"] and str(sc.get("x_regola", "")) == "4":
 		sag_val += 1
 	for i in spesi:
 		var c: int = p["sag"].pop_back()
 		sag_pool.append(c)
 	var col := maxi(0, col0 - sx)
-	var d := dado()
+	var d = dado()
 	var tiro = d + mini(int(x_esplorazione.get(s, 0)), 6 - d)
 	tiro = mini(tiro + piu, 8)
-	var tab := tabella_fato()
+	var tab = tabella_fato()
 	tiro = mini(tiro, tab.size())
 	var ris: String = tab[tiro - 1][col]
 	var testo = "Fato di %s: punti sistema %d, colonna %d, dado %d%s = %d" % [fazione(s), sp, col + 1, d, (" +%d" % piu) if piu > 0 else "", tiro]
@@ -1916,7 +1916,7 @@ func _fato_giocatore(s: int) -> void:
 
 func _applica_fato(s: int, ris: String, sag_val: int) -> void:
 	var p: Dictionary = players[s]
-	var lettera := ris.substr(0, 1)
+	var lettera = ris.substr(0, 1)
 	var gil: bool = opz.get("gilham", false)
 	if lettera in ["A", "B", "C", "D", "E", "F"]:
 		if ignora("fato_AF", s) or ignora("dissoluzione", s):
@@ -2009,11 +2009,11 @@ static func testo_fato(l: String) -> String:
 
 
 func _dissoluzione(s: int, perc: int) -> void:
-	var sp := punti_sistema(s)
+	var sp = punti_sistema(s)
 	var serve := int(ceil(sp * perc / 100.0))
 	if serve <= 0:
 		return
-	var mie := porte_di(s)
+	var mie = porte_di(s)
 	var r = await decide(s, {"type": "dissoluzione", "serve": serve, "porte": mie, "perc": perc})
 	var scelte: Array = []
 	var tot := 0
@@ -2025,7 +2025,7 @@ func _dissoluzione(s: int, perc: int) -> void:
 				tot += int(porte[h]["sp"])
 	if tot < serve:
 		# completa da sola con le porte di valore più basso
-		var resto := mie.filter(func(x): return not (x in scelte))
+		var resto = mie.filter(func(x): return not (x in scelte))
 		resto.sort_custom(func(a, b): return int(porte[a]["sp"]) < int(porte[b]["sp"]))
 		for h in resto:
 			if tot >= serve:
@@ -2058,11 +2058,11 @@ func _comparsa_autonomi(s: int, lettera: String) -> void:
 	if libero < 0:
 		log_msg("Ci sono già quattro forze autonome: il risultato non ha effetto.")
 		return
-	var cand := esp.duplicate()
+	var cand = esp.duplicate()
 	_mescola(cand)
 	for h0 in cand:
 		var h := int(h0)
-		var posti := _posti_autonomi(h, n_porte)
+		var posti = _posti_autonomi(h, n_porte)
 		if posti.size() < n_porte:
 			continue
 		var A: Dictionary = aut[libero]
@@ -2072,7 +2072,7 @@ func _comparsa_autonomi(s: int, lettera: String) -> void:
 		A["cl"] = livello
 		A["cp_val"] = {"G": 100, "H": 200, "I": 400, "J": 800}[lettera]
 		A["visti"] = {}
-		var o := 10 + libero
+		var o = 10 + libero
 		if pv.has(h):
 			var c := int(pv[h]["c"])
 			if c >= 0:
@@ -2086,12 +2086,12 @@ func _comparsa_autonomi(s: int, lettera: String) -> void:
 			porte[g] = {"o": o, "sp": val, "neut": false, "nata": turn, "aum": turn, "orig": o}
 		var fp: Array = A["flotte_pool"].duplicate()
 		_mescola(fp)
-		var per := n_flotte_aut / n_porte
-		var extra := n_flotte_aut - per * n_porte
+		var per = n_flotte_aut / n_porte
+		var extra = n_flotte_aut - per * n_porte
 		var idx := 0
 		for i in n_porte:
-			var q := per + (extra if i == 0 else 0)
-			var fl := {"r": 0, "d": 0, "e": 0}
+			var q = per + (extra if i == 0 else 0)
+			var fl = {"r": 0, "d": 0, "e": 0}
 			for k in q:
 				fl[fp[idx % fp.size()]] += 1
 				idx += 1
@@ -2111,7 +2111,7 @@ func _posti_autonomi(h: int, n: int) -> Array:
 	for dir in range(1, 7):
 		if out.size() >= n:
 			break
-		var x := D.passo(h, dir)
+		var x = D.passo(h, dir)
 		if _idoneo_aut(x, out):
 			out.append(x)
 	# eccedenza: esagoni adiacenti a una porta già piazzata adiacente all'originale
@@ -2123,7 +2123,7 @@ func _posti_autonomi(h: int, n: int) -> Array:
 			if base == h:
 				continue
 			for dir in range(1, 7):
-				var x := D.passo(base, dir)
+				var x = D.passo(base, dir)
 				if _idoneo_aut(x, out):
 					out.append(x)
 					aggiunto = true
@@ -2147,9 +2147,9 @@ func _fase_risorse() -> void:
 		if not players[s]["vivo"]:
 			continue
 		var p: Dictionary = players[s]
-		var entrata := punti_sistema(s)
+		var entrata = punti_sistema(s)
 		p["rp"] = int(p["rp"]) + entrata
-		var costo := manutenzione(s)
+		var costo = manutenzione(s)
 		if costo > int(p["rp"]):
 			_taglia_flotte(s, costo - int(p["rp"]))
 			costo = manutenzione(s)
@@ -2175,15 +2175,15 @@ func _fase_risorse() -> void:
 		var A: Dictionary = aut[i]
 		if not A["presente"]:
 			continue
-		var o := 10 + i
+		var o = 10 + i
 		var ostile := false
 		for s in vivi():
 			if opzione(o, s) == "C":
 				ostile = true
 		if not ostile:
 			continue
-		var mie := porte_di(o)
-		var nuove := mie.size() / 2
+		var mie = porte_di(o)
+		var nuove = mie.size() / 2
 		for k in nuove:
 			var h: int = mie[rng.randi_range(0, mie.size() - 1)]
 			_aggiungi(h, o, {"r": 1, "d": 0, "e": 0})
@@ -2195,7 +2195,7 @@ func _fase_risorse() -> void:
 func manutenzione(s: int) -> int:
 	var t := 0
 	for h in flotte:
-		var st := stack(h, s)
+		var st = stack(h, s)
 		if st.is_empty():
 			continue
 		var n := int(st["r"]) + int(st["d"])
@@ -2213,7 +2213,7 @@ func _taglia_flotte(s: int, manca: int) -> void:
 		var best := -1
 		var bn := 1
 		for h in flotte:
-			var st := stack(h, s)
+			var st = stack(h, s)
 			if st.is_empty():
 				continue
 			var n := int(st["r"]) + int(st["d"])
@@ -2222,7 +2222,7 @@ func _taglia_flotte(s: int, manca: int) -> void:
 				best = h
 		if best < 0:
 			break
-		var st2 := stack(best, s)
+		var st2 = stack(best, s)
 		if int(st2["r"]) > 0:
 			_togli(best, s, {"r": 1}, false)
 		else:
@@ -2260,7 +2260,7 @@ func azione_valida(s: int, a: Dictionary, stato: Dictionary) -> String:
 		"aumenta":
 			if p["guardiani"]:
 				return "i Guardiani non aumentano le porte"
-			var g := porta(h)
+			var g = porta(h)
 			if g.is_empty() or g["neut"] or int(g["o"]) != s:
 				return "non è una porta amica"
 			if int(g["nata"]) == turn:
@@ -2273,7 +2273,7 @@ func azione_valida(s: int, a: Dictionary, stato: Dictionary) -> String:
 			if _flotte_disponibili(h, s, usate) < n:
 				return "flotte insufficienti nell'esagono"
 		"riattiva":
-			var g2 := porta(h)
+			var g2 = porta(h)
 			if g2.is_empty() or not g2["neut"]:
 				return "non è una porta neutralizzata"
 			if p["guardiani"] and int(g2.get("orig", -1)) != s:
@@ -2289,7 +2289,7 @@ func azione_valida(s: int, a: Dictionary, stato: Dictionary) -> String:
 			if rp < int(g2["sp"]):
 				return "servono %d risorse" % int(g2["sp"])
 		"flotta":
-			var g3 := porta(h)
+			var g3 = porta(h)
 			if g3.is_empty() or g3["neut"] or int(g3["o"]) != s:
 				return "si costruisce solo nelle porte amiche"
 			if int(g3["sp"]) <= 0:
@@ -2344,7 +2344,7 @@ func simula_azione(s: int, a: Dictionary, stato: Dictionary) -> void:
 			stato["usate"][h] = int(stato["usate"].get(h, 0)) + int(a.get("n", 1))
 			stato["aumentate"][h] = true
 		"riattiva":
-			var g := porta(h)
+			var g = porta(h)
 			stato["usate"][h] = int(stato["usate"].get(h, 0)) + maxi(0, int(g["sp"]) - cl(s))
 			stato["rp"] = int(stato["rp"]) - int(g["sp"])
 		"flotta":
@@ -2360,13 +2360,13 @@ func simula_azione(s: int, a: Dictionary, stato: Dictionary) -> void:
 
 func _applica_risorse(s: int, azioni: Array) -> void:
 	var p: Dictionary = players[s]
-	var stato := stato_risorse(s)
+	var stato = stato_risorse(s)
 	var fatte := []
 	for a0 in azioni:
 		if not (a0 is Dictionary):
 			continue
 		var a: Dictionary = a0
-		var err := azione_valida(s, a, stato)
+		var err = azione_valida(s, a, stato)
 		if err != "":
 			log_msg("Azione rifiutata (%s): %s." % [str(a.get("t", "")), err], s)
 			continue
@@ -2405,7 +2405,7 @@ func _applica_risorse(s: int, azioni: Array) -> void:
 			"ricerca":
 				var q := int(a.get("rp", 0))
 				p["rp"] = int(p["rp"]) - q
-				var g2 := q / maxi(1, cl(s))
+				var g2 = q / maxi(1, cl(s))
 				p["cp"] = int(p["cp"]) + g2
 				fatte.append("ricerca: %d punti civiltà" % g2)
 		simula_azione(s, a, stato)
@@ -2416,8 +2416,8 @@ func _applica_risorse(s: int, azioni: Array) -> void:
 
 
 func _spendi_flotte(h: int, s: int, n: int) -> void:
-	var st := stack(h, s)
-	var fl := {"r": 0, "d": 0, "e": 0}
+	var st = stack(h, s)
+	var fl = {"r": 0, "d": 0, "e": 0}
 	for k in ["r", "e", "d"]:
 		var q: int = mini(n, int(st[k]))
 		fl[k] = q
@@ -2535,7 +2535,7 @@ func _vittoria() -> void:
 			if turn >= limite:
 				_fine_punteggio()
 		5:
-			var vv := vivi()
+			var vv = vivi()
 			if players.size() == 1:
 				var s0: int = vv[0] if not vv.is_empty() else 0
 				if punti_sistema(s0) >= 100 and _nessuna_porta_ostile(s0):
@@ -2579,7 +2579,7 @@ func _fine_punteggio() -> void:
 	var bv := -1
 	var pari := false
 	for s in vivi():
-		var v := punti_sistema(s) * cl(s)
+		var v = punti_sistema(s) * cl(s)
 		if v > bv:
 			bv = v
 			best = s
@@ -2598,7 +2598,7 @@ func _livello_scorpii(s: int) -> int:
 			return 0
 	if not porta_propria(1816, s):
 		return 0
-	var altro := 1 - s
+	var altro = 1 - s
 	for h in players[altro]["porte_iniziali"]:
 		if porta_propria(h, s):
 			return 2
@@ -2619,12 +2619,12 @@ func _nessuna_porta_ostile(s: int, solo_giocatori := false) -> bool:
 
 
 func _catena_nucleo(s: int) -> bool:
-	var mie := porte_di(s)
+	var mie = porte_di(s)
 	var inizio: Array = players[s]["porte_iniziali"].filter(func(h): return porta_propria(h, s))
 	if inizio.is_empty():
 		return false
 	var visti := {}
-	var coda := inizio.duplicate()
+	var coda = inizio.duplicate()
 	for h in coda:
 		visti[h] = true
 	while not coda.is_empty():
@@ -2642,7 +2642,7 @@ func _catena_nucleo(s: int) -> bool:
 # ================================================================ salvataggio
 
 func salva() -> Dictionary:
-	var c := config.duplicate(true)
+	var c = config.duplicate(true)
 	for k in ["acts", "replay", "codice", "online"]:
 		c.erase(k)
 	return {"config": c, "acts": var_to_str(rec_acts), "turno": turn, "versione": 1}

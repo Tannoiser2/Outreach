@@ -7,7 +7,7 @@ const D = preload("res://scripts/data/od_data.gd")
 static func _griglia(titolo: String, intest: Array, righe: Array, nota := "", in_uso := false) -> VBoxContainer:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
-	var t := UI.intestazione(titolo + ("   (in uso)" if in_uso else ""), 20)
+	var t = UI.intestazione(titolo + ("   (in uso)" if in_uso else ""), 20)
 	if in_uso:
 		t.add_theme_color_override("font_color", UI.AMBRA)
 	v.add_child(t)
@@ -24,7 +24,7 @@ static func _griglia(titolo: String, intest: Array, righe: Array, nota := "", in
 		i += 1
 	v.add_child(g)
 	if nota != "":
-		var l := UI.label(nota, 13, UI.TENUE)
+		var l = UI.label(nota, 13, UI.TENUE)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size = Vector2(700, 0)
 		v.add_child(l)
@@ -41,7 +41,7 @@ static func _cella(t: String, testa: bool, scura: bool) -> PanelContainer:
 	sb.content_margin_top = 2
 	sb.content_margin_bottom = 2
 	p.add_theme_stylebox_override("panel", sb)
-	var l := UI.label(t if t != "" else "·", 14, UI.ORO if testa else UI.TESTO, "intestazione" if testa else "numeri")
+	var l = UI.label(t if t != "" else "·", 14, UI.ORO if testa else UI.TESTO, "intestazione" if testa else "numeri")
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.custom_minimum_size = Vector2(54, 0)
 	p.add_child(l)

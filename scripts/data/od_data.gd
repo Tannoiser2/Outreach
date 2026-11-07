@@ -10,7 +10,7 @@ static var _map := {}
 
 static func mappa() -> Dictionary:
 	if _map.is_empty():
-		var f := FileAccess.open("res://assets/mappa.json", FileAccess.READ)
+		var f = FileAccess.open("res://assets/mappa.json", FileAccess.READ)
 		var d: Dictionary = JSON.parse_string(f.get_as_text())
 		var esa := {}
 		for k in d["esagoni"]:
@@ -42,7 +42,7 @@ static func esiste(h: int) -> bool:
 
 
 static func nucleo(h: int) -> bool:
-	var t := terreno(h)
+	var t = terreno(h)
 	return t == "N" or t == "W"
 
 
@@ -72,22 +72,22 @@ static func nome(h: int) -> String:
 
 ## Coordinate cubiche (colonne 1, 3, 5... più in alto: le pari sono spostate di mezzo esagono in basso).
 static func cubo(h: int) -> Vector3i:
-	var q := col(h) - 1
-	var r := row(h) - 1
-	var x := q
-	var z := r - (q - (q & 1)) / 2
+	var q = col(h) - 1
+	var r = row(h) - 1
+	var x = q
+	var z = r - (q - (q & 1)) / 2
 	return Vector3i(x, -x - z, z)
 
 
 static func da_cubo(c: Vector3i) -> int:
-	var q := c.x
-	var r := c.z + (q - (q & 1)) / 2
+	var q = c.x
+	var r = c.z + (q - (q & 1)) / 2
 	return hx(q + 1, r + 1)
 
 
 static func distanza(a: int, b: int) -> int:
-	var ca := cubo(a)
-	var cb := cubo(b)
+	var ca = cubo(a)
+	var cb = cubo(b)
 	return maxi(maxi(absi(ca.x - cb.x), absi(ca.y - cb.y)), absi(ca.z - cb.z))
 
 
@@ -102,7 +102,7 @@ static func passo(h: int, dir: int, n := 1) -> int:
 static func vicini(h: int) -> Array:
 	var out := []
 	for d in 6:
-		var v := passo(h, d + 1)
+		var v = passo(h, d + 1)
 		if esiste(v):
 			out.append(v)
 	return out
@@ -110,22 +110,22 @@ static func vicini(h: int) -> Array:
 
 ## Centro dell'esagono nel piano (unità: lato dell'esagono = 1).
 static func centro(h: int) -> Vector2:
-	var c := col(h)
-	var r := row(h)
-	var y := (r - 1) * sqrt(3.0) + (0.0 if c % 2 == 1 else sqrt(3.0) / 2.0)
+	var c = col(h)
+	var r = row(h)
+	var y = (r - 1) * sqrt(3.0) + (0.0 if c % 2 == 1 else sqrt(3.0) / 2.0)
 	return Vector2((c - 1) * 1.5, y)
 
 
 static func da_punto(p: Vector2) -> int:
 	# punto -> esagono (arrotondamento cubico)
-	var q := p.x / 1.5
+	var q = p.x / 1.5
 	var qf := roundf(q)
 	# conversione assiale "flat top": q = 2/3 x, r = -1/3 x + sqrt3/3 y
-	var aq := (2.0 / 3.0) * p.x
-	var ar := (-1.0 / 3.0) * p.x + (sqrt(3.0) / 3.0) * p.y
-	var cx := aq
-	var cz := ar
-	var cy := -cx - cz
+	var aq = (2.0 / 3.0) * p.x
+	var ar = (-1.0 / 3.0) * p.x + (sqrt(3.0) / 3.0) * p.y
+	var cx = aq
+	var cz = ar
+	var cy = -cx - cz
 	var rx := roundf(cx)
 	var ry := roundf(cy)
 	var rz := roundf(cz)
@@ -138,7 +138,7 @@ static func da_punto(p: Vector2) -> int:
 		ry = -rx - rz
 	else:
 		rz = -rx - ry
-	var _u := qf
+	var _u = qf
 	# l'origine assiale è il centro dell'esagono 0101; nel sistema di colonne dispari in alto
 	# l'asse r assiale corrisponde a z cubico
 	return da_cubo(Vector3i(int(rx), int(ry), int(rz)))
@@ -148,13 +148,13 @@ static func da_punto(p: Vector2) -> int:
 static func vista(a: int, b: int) -> bool:
 	if a == b:
 		return true
-	var pa := centro(a)
-	var pb := centro(b)
-	var n := int(pa.distance_to(pb) * 6.0) + 2
-	var prec := a
+	var pa = centro(a)
+	var pb = centro(b)
+	var n = int(pa.distance_to(pb) * 6.0) + 2
+	var prec = a
 	for i in range(1, n + 1):
-		var p := pa.lerp(pb, float(i) / n)
-		var h := da_punto(p)
+		var p = pa.lerp(pb, float(i) / n)
+		var h = da_punto(p)
 		if h != prec:
 			if distanza(h, prec) == 1 and polvere(h, prec):
 				return false
@@ -386,7 +386,7 @@ static func perdite(n: int, perc: int, rivista: bool) -> int:
 		return n
 	if rivista or n > 50:
 		return mini(n, int(ceil(n * perc / 100.0)))
-	var c := CONV_PERC.find(perc)
+	var c = CONV_PERC.find(perc)
 	if c < 0:
 		# percentuale non in tabella: la più vicina per eccesso
 		c = CONV_PERC.size() - 1
@@ -536,7 +536,7 @@ const NOMI_SEME := ["Popolo dei Venti Seme", "Figli della Polvere", "Erranti di 
 
 ## "2d 5r 1e" -> {"r": 5, "d": 2, "e": 1}
 static func flotte_da_testo(t: String) -> Dictionary:
-	var out := {"r": 0, "d": 0, "e": 0}
+	var out = {"r": 0, "d": 0, "e": 0}
 	for p in t.split(" ", false):
 		var k = p.substr(p.length() - 1)
 		out[k] = out.get(k, 0) + int(p.substr(0, p.length() - 1))

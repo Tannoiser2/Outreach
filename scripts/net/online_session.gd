@@ -50,17 +50,17 @@ func decide(eng, s: int, req: Dictionary):
 
 
 func decide_all(eng, seats: Array, reqs: Array) -> Array:
-	var base := n
+	var base = n
 	var res := []
 	var done := []
 	for i in seats.size():
 		res.append(null)
 		done.append(false)
-		var idx := base + i
+		var idx = base + i
 		if idx < backlog.size():
 			res[i] = _val(backlog[idx])
 			done[i] = true
-	var all_done := not done.has(false)
+	var all_done = not done.has(false)
 	if not all_done and catchup:
 		catchup = false
 		if view != null:
@@ -70,7 +70,7 @@ func decide_all(eng, seats: Array, reqs: Array) -> Array:
 		if done[i]:
 			continue
 		var s: int = seats[i]
-		var idx := base + i
+		var idx = base + i
 		var r = null
 		var mine := false
 		if s == seat:
@@ -111,7 +111,7 @@ func decide_all(eng, seats: Array, reqs: Array) -> Array:
 ## Pubblica la decisione e la restituisce. Se la mossa c'è già (l'ha scritta prima un altro
 ## dispositivo) vale quella.
 func _publish(s: int, idx: int, r):
-	var a := {"s": s, "k": "d", "v": var_to_str(r)}
+	var a = {"s": s, "k": "d", "v": var_to_str(r)}
 	while alive:
 		if await net.post_act(code, idx, a):
 			return r
@@ -125,9 +125,9 @@ func _publish(s: int, idx: int, r):
 
 
 func _wait(eng, s: int, idx: int, req: Dictionary):
-	var t0 := Time.get_ticks_msec()
+	var t0 = Time.get_ticks_msec()
 	var last_seen = null
-	var seen_t := t0
+	var seen_t = t0
 	var polls := 0
 	var slow := false
 	if view != null:
@@ -140,7 +140,7 @@ func _wait(eng, s: int, idx: int, req: Dictionary):
 			if view != null:
 				view.online_waiting(-1, false)
 			return _val(a)
-		var now := Time.get_ticks_msec()
+		var now = Time.get_ticks_msec()
 		if role == "host" and not eng.players[s]["ai"] and polls % 4 == 0:
 			var st = await net.seat(code, s)
 			if not alive:
@@ -158,7 +158,7 @@ func _wait(eng, s: int, idx: int, req: Dictionary):
 						view.online_status("%s non risponde: per ora gioca l'IA." % eng.pname(s))
 					var r = eng.ais[s].decide(eng, s, req)
 					return await _publish(s, idx, r)
-		var sl := now - t0 > 60000
+		var sl = now - t0 > 60000
 		if sl != slow:
 			slow = sl
 			if view != null:

@@ -29,7 +29,7 @@ var _ultimo_umano := -1
 # stato delle scelte in corso
 var sel := -1
 var dest := -1
-var forza := {"r": 0, "d": 0, "e": 0}
+var forza = {"r": 0, "d": 0, "e": 0}
 var prendi_sag := false
 var spin := {}
 var azioni_ris: Array = []
@@ -225,7 +225,7 @@ func _aggiorna() -> void:
 		dot.custom_minimum_size = Vector2(14, 14)
 		dot.color = D.TINTE[i]
 		r.add_child(dot)
-		var mio := replay or i == vista or vista < 0
+		var mio = replay or i == vista or vista < 0
 		var testo = "%s%s  civiltà %d" % [p["fazione"], "" if p["name"] == "" else " (%s)" % p["name"], eng.cl(i)]
 		if mio:
 			testo += "  sistema %d  risorse %d" % [eng.punti_sistema(i), p["rp"]]
@@ -291,7 +291,7 @@ func _on_hover(h: int) -> void:
 		stato_lbl.text = ""
 		return
 	var t = "%s  %s" % [D.nome(h), {"A": "asse della spirale", "F": "frangia della spirale", "I": "spazio interspirale", "N": "Nucleo galattico", "W": "centro del Nucleo"}.get(D.terreno(h), "")]
-	var nf := D.faro_stampato(h)
+	var nf = D.faro_stampato(h)
 	if nf != "":
 		t += "  stella faro: " + nf
 	elif eng.fari.has(h):
@@ -422,7 +422,7 @@ func _evidenzia() -> void:
 
 
 func _testo(t: String, size := 15, col := UI.TESTO) -> Label:
-	var l := UI.label(t, size, col)
+	var l = UI.label(t, size, col)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size = Vector2(440, 0)
 	return l
@@ -503,7 +503,7 @@ func _ui_mossa() -> void:
 				else:
 					azione.add_child(_testo("Nessun rischio di dispersione.", 14, UI.VERDE))
 				azione.add_child(UI.bottone("Salta", func():
-					var out := forza.duplicate()
+					var out = forza.duplicate()
 					out["da"] = sel
 					out["a"] = dest
 					out["sag"] = 1 if prendi_sag and eng.sag_centro.has(sel) else 0
@@ -515,11 +515,11 @@ func _ui_mossa() -> void:
 func _mete(s: int, da: int, riserva: bool) -> void:
 	var raggio := maxi(1, eng.clr(s))
 	var portata = raggio if riserva or not eng.porta_utile(da, s) else maxi(raggio, 8)
-	var c0 := D.col(da)
-	var r0 := D.row(da)
+	var c0 = D.col(da)
+	var r0 = D.row(da)
 	for c in range(c0 - portata, c0 + portata + 1):
 		for rr in range(r0 - portata, r0 + portata + 1):
-			var h := D.hx(c, rr)
+			var h = D.hx(c, rr)
 			if h == da or not D.esiste(h) or D.distanza(da, h) > portata:
 				continue
 			if eng.mossa_valida(s, da, h, forza, riserva) != "":
@@ -559,7 +559,7 @@ func _ui_esplora() -> void:
 		b2.bersagli[h] = Color(0.5, 0.9, 1.0, 0.7)
 		var st = eng.stack(h, int(req["seat"]))
 		var n = 2 * int(st["e"]) + int(st["r"]) + int(st["d"])
-		var col := D.col_esplorazione(n)
+		var col = D.col_esplorazione(n)
 		var cb := CheckBox.new()
 		cb.text = "%s  (%s, flotte corrette %d: riesce con %d o meno)" % [D.nome(h), {"A": "asse", "F": "frangia", "I": "interspirale"}.get(D.terreno(h), ""), n, col + 1]
 		cb.button_pressed = true
@@ -591,7 +591,7 @@ func _ui_contatto() -> void:
 		sl.value = int(c["max"])
 		sl.step = 1
 		sl.custom_minimum_size = Vector2(260, 24)
-		var lab := UI.label("", 15)
+		var lab = UI.label("", 15)
 		var aggiorna := func(v):
 			_scelte[h] = int(v)
 			lab.text = "indice %d: contatto con %d o meno" % [int(v), D.col_contatto(int(v))]
@@ -673,7 +673,7 @@ func _ui_riduzione() -> void:
 	var g = eng.porta(h)
 	var cap = eng._cap_rid(h, s)
 	azione.add_child(_testo("In %s c'è una porta di %s senza difensori. Vuoi tentare di neutralizzarla? Capacità di riduzione %d (corazzate + civiltà); il valore della porta non ti è noto." % [D.nome(h), eng.fazione(int(req["proprietario"])), cap], 15))
-	var _u := g
+	var _u = g
 	azione.add_child(UI.bottone("Sì, riduci", func(): _invia(true)))
 	azione.add_child(UI.bottone("No", func(): _invia(false)))
 
@@ -685,7 +685,7 @@ func _ui_fato() -> void:
 	var rp := int(req["rp"])
 	var gil: bool = req.get("gilham", false)
 	var col0 := int(req["colonna"])
-	var stato := {"piu": 0, "sx": 0, "sag": 0}
+	var stato = {"piu": 0, "sx": 0, "sag": 0}
 	azione.add_child(_testo("Fato: i tuoi punti sistema sono %d (colonna %d). Puoi spendere risorse per spostarti a sinistra (5 ciascuna)%s, e gettoni saggezza (ne hai %d) per gli aumenti di civiltà L1 e K2." % [req["sp"], col0 + 1, "" if gil else " e per aggiungere 1 al dado (50 ciascuno, al massimo 8)", req["sag"]], 15))
 	var prev := RichTextLabel.new()
 	prev.bbcode_enabled = true
@@ -719,7 +719,7 @@ func _ui_fato() -> void:
 	azione.add_child(prev)
 	ricalcola.call()
 	azione.add_child(UI.bottone("Tira il dado del Fato", func(): _invia(stato.duplicate())))
-	var _u := s
+	var _u = s
 
 
 func _spiega(r: String) -> String:
@@ -737,7 +737,7 @@ func _ui_dissoluzione() -> void:
 	var serve := int(req["serve"])
 	azione.add_child(_testo("Dissoluzione del %d%%: scegli porte da neutralizzare per almeno %d punti sistema." % [req["perc"], serve], 15, UI.ROSSO))
 	_scelte.clear()
-	var tot_lbl := UI.label("", 15)
+	var tot_lbl = UI.label("", 15)
 	var aggiorna := func():
 		var t := 0
 		for h in _scelte:
@@ -794,7 +794,7 @@ func _ui_risorse(schieramento: bool) -> void:
 				{"t": "flotta", "h": hex_ris, "k": "r", "n": 1}, {"t": "flotta", "h": hex_ris, "k": "d", "n": 1}, {"t": "flotta", "h": hex_ris, "k": "e", "n": 1}]
 		var almeno := false
 		for a in possibili:
-			var err := _valida_ris(s, a, schieramento)
+			var err = _valida_ris(s, a, schieramento)
 			if err != "":
 				continue
 			almeno = true
@@ -821,7 +821,7 @@ func _ui_risorse(schieramento: bool) -> void:
 			_costruisci(), 14))
 	azione.add_child(UI.sep())
 	azione.add_child(UI.bottone("Fine", func():
-		var out := azioni_ris.duplicate()
+		var out = azioni_ris.duplicate()
 		azioni_ris = []
 		stato_ris = {}
 		hex_ris = -1
@@ -887,7 +887,7 @@ func _finestra(titolo: String, largo := 900.0) -> VBoxContainer:
 	var v := VBoxContainer.new()
 	finestra.add_child(v)
 	var h := HBoxContainer.new()
-	var t := UI.titolo(titolo, 28)
+	var t = UI.titolo(titolo, 28)
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(t)
 	h.add_child(UI.bottone("Chiudi", _chiudi_finestra))
@@ -903,7 +903,7 @@ func _finestra(titolo: String, largo := 900.0) -> VBoxContainer:
 
 
 func _mostra_plancia() -> void:
-	var s := vista if vista >= 0 else 0
+	var s = vista if vista >= 0 else 0
 	var c = _finestra("Plancia di %s" % eng.fazione(s))
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 30)
@@ -921,8 +921,8 @@ func _mostra_plancia() -> void:
 	tr.size = Vector2(600, 780)
 	tav.add_child(tr)
 	# i segnalini: colonna = la nostra opzione, riga = la loro (in alto se non è nota)
-	var cols := {"A": 102, "B": 292, "C": 484}
-	var righe := {"": 160, "A": 410, "B": 552, "C": 694}
+	var cols = {"A": 102, "B": 292, "C": 484}
+	var righe = {"": 160, "A": 410, "B": 552, "C": 694}
 	var occ := {}
 	for o in _parti_note(s):
 		var mia = eng.opzione(s, o)
@@ -1006,12 +1006,12 @@ func _effetto_coppia(m: String, l: String) -> String:
 
 
 func _mostra_tabelle() -> void:
-	var c := _finestra("Tabelle", 1500)
+	var c = _finestra("Tabelle", 1500)
 	c.add_child(preload("res://scripts/ui/tabelle_view.gd").crea(eng))
 
 
 func _mostra_regole() -> void:
-	var c := _finestra("Regole", 1500)
+	var c = _finestra("Regole", 1500)
 	c.add_child(preload("res://scripts/ui/rules_view.gd").testo_regole())
 
 
@@ -1020,7 +1020,7 @@ func _mostra_regole() -> void:
 func _on_fine(r: Dictionary) -> void:
 	if online != null:
 		online.finish()
-	var c := _finestra("Fine della partita", 800)
+	var c = _finestra("Fine della partita", 800)
 	var w := int(r.get("winner", -1))
 	c.add_child(UI.titolo("Vince %s" % eng.pname(w) if w >= 0 else "Nessun vincitore", 38))
 	c.add_child(_testo(str(r.get("reason", "")), 20))
@@ -1033,7 +1033,7 @@ func _on_fine(r: Dictionary) -> void:
 
 
 func _rivedi() -> void:
-	var cfg := eng.config.duplicate(true)
+	var cfg = eng.config.duplicate(true)
 	cfg["acts"] = eng.rec_acts.duplicate(true)
 	cfg["replay"] = true
 	cfg["anim"] = 2.0
@@ -1051,7 +1051,7 @@ func _salva() -> void:
 	else:
 		config["codice"] = codice
 		_messaggio("Partita salvata con il codice %s (lo si inserisce nel menu, Carica partita)." % codice)
-		var c := _finestra("Partita salvata", 600)
+		var c = _finestra("Partita salvata", 600)
 		c.add_child(UI.titolo(codice, 60))
 		c.add_child(_testo("Per riprendere la partita: menu, Carica partita, e questo codice.", 18))
 

@@ -9,19 +9,19 @@ static var stile := "originale"
 static var _cache := {}
 
 static func tex(nome: String) -> Texture2D:
-	var k := stile + ":" + nome
+	var k = stile + ":" + nome
 	if _cache.has(k):
 		return _cache[k]
 	var t: Texture2D = null
 	if stile == "reborn":
 		for ext in [".png", ".jpg", ".webp"]:
-			var p := "res://assets/reborn/" + nome + ext
+			var p = "res://assets/reborn/" + nome + ext
 			if ResourceLoader.exists(p):
 				t = load(p)
 				break
 	if t == null:
 		for ext in [".png", ".jpg"]:
-			var p2 := "res://assets/counters/" + nome + ext
+			var p2 = "res://assets/counters/" + nome + ext
 			if ResourceLoader.exists(p2):
 				t = load(p2)
 				break
@@ -60,7 +60,7 @@ static func tinta(o: int) -> Color:
 
 ## Mappa di fondo: originale (scansione SPI) o reborn (griglia con la galassia).
 static func mappa() -> Texture2D:
-	var k := stile + ":mappa"
+	var k = stile + ":mappa"
 	if _cache.has(k):
 		return _cache[k]
 	var t: Texture2D = null
@@ -91,14 +91,14 @@ const GMY := 1.4
 
 ## Centro di un esagono in pixel della texture di fondo.
 static func centro_px(h: int, tex_w: float) -> Vector2:
-	var c := D.col(h)
-	var r := D.row(h)
+	var c = D.col(h)
+	var r = D.row(h)
 	if usa_griglia():
-		var p := D.centro(h)
+		var p = D.centro(h)
 		return Vector2((p.x + GMX) * GS, (p.y + GMY) * GS) * (tex_w / 4045.0)
-	var k := tex_w / 10000.0
-	var x := OX + (c - 7) * OPX
-	var y := OY + (r - 1) * OPY + (0.0 if c % 2 == 1 else OPY / 2.0)
+	var k = tex_w / 10000.0
+	var x = OX + (c - 7) * OPX
+	var y = OY + (r - 1) * OPY + (0.0 if c % 2 == 1 else OPY / 2.0)
 	return Vector2(x, y) * k
 
 

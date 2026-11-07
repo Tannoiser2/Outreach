@@ -26,8 +26,8 @@ var pitch := 0.95
 var dist := 42.0
 var target := Vector3(37, 0, 24)
 var _drag := 0
-var _from := Vector2.ZERO
-var _press := Vector2.ZERO
+var _from = Vector2.ZERO
+var _press = Vector2.ZERO
 var _moved := false
 var t := 0.0
 var nuvola := true
@@ -89,7 +89,7 @@ func ricarica() -> void:
 
 ## Posizione nel mondo del centro di un esagono.
 func pos(h: int) -> Vector3:
-	var p := D.centro(h)
+	var p = D.centro(h)
 	return Vector3(p.x, 0, p.y)
 
 
@@ -106,11 +106,11 @@ func _piano() -> void:
 	# la texture va messa in modo che i centri degli esagoni coincidano con D.centro()
 	var w := float(tex.get_width())
 	var hh := float(tex.get_height())
-	var a := Grafica.centro_px(101, w)
-	var b := Grafica.centro_px(5101, w)
-	var c := Grafica.centro_px(129, w)
-	var sx := (D.centro(5101).x - D.centro(101).x) / (b.x - a.x)
-	var sz := (D.centro(129).y - D.centro(101).y) / (c.y - a.y)
+	var a = Grafica.centro_px(101, w)
+	var b = Grafica.centro_px(5101, w)
+	var c = Grafica.centro_px(129, w)
+	var sx = (D.centro(5101).x - D.centro(101).x) / (b.x - a.x)
+	var sz = (D.centro(129).y - D.centro(101).y) / (c.y - a.y)
 	pm.size = Vector2(w * sx, hh * sz)
 	mi.mesh = pm
 	mi.position = Vector3(-a.x * sx + w * sx / 2.0, 0, -a.y * sz + hh * sz / 2.0)
@@ -119,7 +119,7 @@ func _piano() -> void:
 	var gal: Texture2D = load("res://assets/board/galassia.png")
 	var neb: Texture2D = load("res://assets/board/nebulosa.png")
 	var gw := 4045.0
-	var gsx := 1.0 / Grafica.GS
+	var gsx = 1.0 / Grafica.GS
 	var size := Vector2(gw * gsx, 2712.0 * gsx)
 	var centro := Vector3(-Grafica.GMX + size.x / 2.0, 0, -Grafica.GMY + size.y / 2.0)
 	var strati = [[gal, 1.6, 0.5], [gal, 3.2, 0.22], [neb, 5.0, 0.35]]
@@ -182,7 +182,7 @@ func set_nuvola(v: bool) -> void:
 
 
 func _camera() -> void:
-	var off := Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch)) * dist
+	var off = Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch)) * dist
 	cam.position = target + off
 	cam.look_at(target, Vector3.UP)
 
@@ -198,7 +198,7 @@ func _process(d: float) -> void:
 	# la nuvola respira e ruota lentamente attorno al Nucleo
 	for i in nuvole.size():
 		var n: MeshInstance3D = nuvole[i]
-		var a := sin(t * 0.05 + i) * 0.015 * (i + 1)
+		var a = sin(t * 0.05 + i) * 0.015 * (i + 1)
 		n.rotation.y = a
 		n.position.y = [1.6, 3.2, 5.0][i] + sin(t * 0.3 + i) * 0.15
 	if _sel_mesh != null:
@@ -221,7 +221,7 @@ func _process(d: float) -> void:
 
 func _gui_input(ev: InputEvent) -> void:
 	if ev is InputEventMouseButton:
-		var mb := ev as InputEventMouseButton
+		var mb = ev as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
 			dist = maxf(6.0, dist / 1.12)
 			_camera()
@@ -235,29 +235,29 @@ func _gui_input(ev: InputEvent) -> void:
 			_moved = false
 		else:
 			if mb.button_index == MOUSE_BUTTON_LEFT and not _moved:
-				var h := _pick(mb.position)
+				var h = _pick(mb.position)
 				if h > 0:
 					hex_clicked.emit(h)
 			_drag = 0
 	elif ev is InputEventMouseMotion:
-		var mm := ev as InputEventMouseMotion
+		var mm = ev as InputEventMouseMotion
 		if _drag != 0:
 			if mm.position.distance_to(_press) > 6:
 				_moved = true
-			var dd := mm.position - _from
+			var dd = mm.position - _from
 			_from = mm.position
 			if _moved:
 				if _drag == MOUSE_BUTTON_RIGHT or (_drag == MOUSE_BUTTON_LEFT and mm.shift_pressed):
 					yaw -= dd.x * 0.006
 					pitch = clampf(pitch + dd.y * 0.005, 0.25, 1.45)
 				else:
-					var f := dist * 0.0018
+					var f = dist * 0.0018
 					var fw := Vector3(sin(yaw), 0, cos(yaw))
 					var rt := Vector3(cos(yaw), 0, -sin(yaw))
 					target -= rt * dd.x * f + fw * dd.y * f
 				_camera()
 		else:
-			var h2 := _pick(mm.position)
+			var h2 = _pick(mm.position)
 			if h2 != hover:
 				hover = h2
 				hex_hovered.emit(h2)
@@ -271,24 +271,24 @@ func _gui_input(ev: InputEvent) -> void:
 
 
 func _pick(p: Vector2) -> int:
-	var sc := Vector2(vp.size) / size if size.x > 0 else Vector2.ONE
-	var q := p * sc
-	var o := cam.project_ray_origin(q)
-	var dir := cam.project_ray_normal(q)
+	var sc = Vector2(vp.size) / size if size.x > 0 else Vector2.ONE
+	var q = p * sc
+	var o = cam.project_ray_origin(q)
+	var dir = cam.project_ray_normal(q)
 	if absf(dir.y) < 0.0001:
 		return -1
-	var k := -o.y / dir.y
+	var k = -o.y / dir.y
 	if k < 0:
 		return -1
-	var w := o + dir * k
-	var h := D.da_punto(Vector2(w.x, w.z))
+	var w = o + dir * k
+	var h = D.da_punto(Vector2(w.x, w.z))
 	return h if D.esiste(h) else -1
 
 
 # ---------------------------------------------------------------- pedine
 
 func _mat_tex(nome: String, scuro := false) -> StandardMaterial3D:
-	var k := nome + (":s" if scuro else "") + ":" + Grafica.stile
+	var k = nome + (":s" if scuro else "") + ":" + Grafica.stile
 	if _cache_mat.has(k):
 		return _cache_mat[k]
 	var m := StandardMaterial3D.new()
@@ -346,7 +346,7 @@ func aggiorna() -> void:
 	for h in eng.porte:
 		var g: Dictionary = eng.porte[h]
 		var o := int(g.get("prima", g["o"])) if g["neut"] else int(g["o"])
-		var p := pos(h) + Vector3(-0.35, 0.02, -0.35)
+		var p = pos(h) + Vector3(-0.35, 0.02, -0.35)
 		var n = _gettone(Grafica.nome_porta(o), p, 0.75, Grafica.tinta(o), g["neut"])
 		pedine.add_child(n)
 		if not g["neut"]:
@@ -374,10 +374,10 @@ func aggiorna() -> void:
 		for o in eng.proprietari(h):
 			var st: Dictionary = eng.stack(h, o)
 			var tot := int(st["r"]) + int(st["d"]) + int(st["e"])
-			var base := pos(h) + Vector3(0.3 + i * 0.25, 0.02, 0.15 + i * 0.25)
-			var strati := clampi(tot, 1, 6) if _vede(o) else 1
+			var base = pos(h) + Vector3(0.3 + i * 0.25, 0.02, 0.15 + i * 0.25)
+			var strati = clampi(tot, 1, 6) if _vede(o) else 1
 			for k in strati:
-				var n2 := _gettone(Grafica.nome_flotta(o), base + Vector3(0, k * 0.13, 0), 0.7, Grafica.tinta(o))
+				var n2 = _gettone(Grafica.nome_flotta(o), base + Vector3(0, k * 0.13, 0), 0.7, Grafica.tinta(o))
 				pedine.add_child(n2)
 			if _vede(o):
 				pedine.add_child(_testo("%d" % tot, base + Vector3(0.35, 0.35 + strati * 0.13, 0)))
@@ -408,7 +408,7 @@ func aggiorna() -> void:
 		if eng.porte.has(h):
 			continue
 		var v = eng.valore_pv(h) if tutto_visibile else (eng.pv_noto(h, vista) if vista >= 0 else -1)
-		var gp := _gettone("pv", pos(h) + Vector3(0.45, 0.02, -0.45), 0.4, Color(0.6, 0.62, 0.6))
+		var gp = _gettone("pv", pos(h) + Vector3(0.45, 0.02, -0.45), 0.4, Color(0.6, 0.62, 0.6))
 		pedine.add_child(gp)
 		pedine.add_child(_testo(str(v) if v >= 0 else "?", pos(h) + Vector3(0.45, 0.35, -0.45), Color(0.9, 0.9, 0.9), 36))
 	_evidenzia()
