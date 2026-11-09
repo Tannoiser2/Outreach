@@ -254,6 +254,9 @@ func _process(d: float) -> void:
 		_sel_mesh.scale = Vector3.ONE * (1.0 + 0.06 * sin(t * 5.0))
 	_aggiorna_fili(d)
 	_pulsa_fari()
+	for c in pedine.get_children():
+		if c.has_meta("gira"):
+			c.rotation.y += d * float(c.get_meta("gira"))
 	for c in effetti.get_children():
 		if c.has_meta("filo"):
 			continue
@@ -406,8 +409,11 @@ func aggiorna() -> void:
 		var g: Dictionary = eng.porte[h]
 		var o := int(g.get("prima", g["o"])) if g["neut"] else int(g["o"])
 		var p = pos(h) + Vector3(-0.35, 0.02, -0.35)
-		var n = _gettone(Grafica.nome_porta(o), p, 0.75, Grafica.tinta(o), g["neut"])
-		pedine.add_child(n)
+		if usa_modelli and _scena_porta() != null:
+			p = pos(h) + Vector3(0, 0.02, 0)
+			pedine.add_child(_modello_porta(pos(h), g["neut"]))
+		else:
+			pedine.add_child(_gettone(Grafica.nome_porta(o), p, 0.75, Grafica.tinta(o), g["neut"]))
 		if not g["neut"]:
 			var anello := MeshInstance3D.new()
 			var tm := TorusMesh.new()
@@ -424,9 +430,9 @@ func aggiorna() -> void:
 			anello.position = pos(h) + Vector3(0, 0.05, 0)
 			pedine.add_child(anello)
 			if _vede(o):
-				pedine.add_child(_testo(str(g["sp"]), p + Vector3(0.3, 0.5, 0)))
+				pedine.add_child(_testo(str(g["sp"]), p + Vector3(0.3, 1.0 if usa_modelli else 0.5, 0)))
 		else:
-			pedine.add_child(_testo("N", p + Vector3(0, 0.5, 0), UI.ROSSO))
+			pedine.add_child(_testo("N", p + Vector3(0, 1.0 if usa_modelli else 0.5, 0), UI.ROSSO))
 	# flotte: una pila per proprietario, alta quanto le flotte
 	for h in eng.flotte:
 		var i := 0
@@ -435,6 +441,16 @@ func aggiorna() -> void:
 			var tot := int(st["r"]) + int(st["d"]) + int(st["e"])
 			var base = pos(h) + Vector3(0.3 + i * 0.25, 0.02, 0.15 + i * 0.25)
 			var strati = clampi(tot, 1, 6) if _vede(o) else 1
+			if usa_modelli and _scena_nave() != null:
+				base = pos(h) + Vector3(0.45 - i * 0.42, 0.02, 0.45 + i * 0.12)
+				var navi := 1
+				if _vede(o):
+					navi = 1 if tot <= 2 else (2 if tot <= 7 else 3)
+				pedine.add_child(_modello_flotta(base, Grafica.tinta(o), navi))
+				if _vede(o):
+					pedine.add_child(_testo("%d" % tot, base + Vector3(0.25, 1.0, 0)))
+				i += 1
+				continue
 			for k in strati:
 				var n2 = _gettone(Grafica.nome_flotta(o), base + Vector3(0, k * 0.13, 0), 0.7, Grafica.tinta(o))
 				pedine.add_child(n2)
@@ -789,3 +805,83 @@ func _due_dita(fattore: float, _centro: Vector2, sposta: Vector2, rot: float) ->
 	yaw -= rot
 	pitch = clampf(pitch + sposta.y * 0.006, 0.25, 1.45)
 	_camera()
+
+
+# ---------------------------------------------------------------- modelli 3D di porte e flotte
+
+## In 3D le porte sono la stazione StarGate e le flotte le Teleship (assets/models); il colore
+## del proprietario è nell'anello luminoso alla base. Se i modelli mancano si usano i gettoni.
+var usa_modelli := true
+static var _sc_porta: PackedScene
+static var _sc_nave: PackedScene
+
+
+static func _scena_porta() -> PackedScene:
+	if _sc_porta == null and ResourceLoader.exists("res://assets/models/stargate.glb"):
+		_sc_porta = load("res://assets/models/stargate.glb")
+	return _sc_porta
+
+
+static func _scena_nave() -> PackedScene:
+	if _sc_nave == null and ResourceLoader.exists("res://assets/models/teleship.glb"):
+		_sc_nave = load("res://assets/models/teleship.glb")
+	return _sc_nave
+
+
+func _spegni(n: Node) -> void:
+	# porta neutralizzata: il modello diventa scuro e trasparente
+	for c in n.get_children():
+		if c is GeometryInstance3D:
+			(c as GeometryInstance3D).transparency = 0.6
+			var m := StandardMaterial3D.new()
+			m.albedo_color = Color(0.25, 0.25, 0.3, 0.5)
+			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			(c as GeometryInstance3D).material_override = m
+		_spegni(c)
+
+
+func _modello_porta(p: Vector3, neut: bool) -> Node3D:
+	var n := Node3D.new()
+	n.position = p
+	var m: Node3D = _scena_porta().instantiate()
+	m.scale = Vector3.ONE * 0.5
+	m.position.y = 0.43
+	n.add_child(m)
+	if neut:
+		_spegni(m)
+	else:
+		n.set_meta("gira", 0.12)
+	return n
+
+
+func _modello_flotta(p: Vector3, tinta: Color, navi: int) -> Node3D:
+	var n := Node3D.new()
+	n.position = p
+	# base colorata del proprietario
+	var disco := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 0.2
+	tm.outer_radius = 0.26
+	var ma := StandardMaterial3D.new()
+	ma.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ma.albedo_color = tinta
+	ma.emission_enabled = true
+	ma.emission = tinta
+	ma.emission_energy_multiplier = 1.8
+	tm.material = ma
+	disco.mesh = tm
+	disco.position.y = 0.03
+	n.add_child(disco)
+	var posti = [Vector3.ZERO]
+	if navi == 2:
+		posti = [Vector3(-0.12, 0, 0), Vector3(0.12, 0, 0.05)]
+	elif navi >= 3:
+		posti = [Vector3(0, 0, -0.12), Vector3(-0.12, 0, 0.08), Vector3(0.12, 0, 0.08)]
+	var sc = 0.34 if navi == 1 else 0.26
+	for q in posti:
+		var nave: Node3D = _scena_nave().instantiate()
+		nave.scale = Vector3.ONE * sc
+		nave.position = q + Vector3(0, 0.95 * sc + 0.05, 0)
+		n.add_child(nave)
+	n.set_meta("gira", 0.35)
+	return n

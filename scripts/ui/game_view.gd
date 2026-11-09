@@ -500,20 +500,22 @@ func _on_hex(h: int) -> void:
 	var tipo := str(req.get("type", ""))
 	match tipo:
 		"mossa":
+			# prima si sceglie la forza; poi ogni clic su un altro esagono è la destinazione,
+			# anche se lì ci sono altre flotte proprie. Un clic sulla forza scelta la deseleziona.
 			var lib: Array = req["libere"]
-			if h in lib and (sel < 0 or dest < 0 or h == sel):
-				sel = h
+			if sel < 0:
+				if h in lib:
+					sel = h
+					dest = -1
+					forza = eng.liberi(h, int(req["seat"]))
+					prendi_sag = eng.sag_centro.has(h)
+					_costruisci()
+			elif h == sel:
+				sel = -1
 				dest = -1
-				forza = eng.liberi(h, int(req["seat"]))
-				prendi_sag = eng.sag_centro.has(h)
 				_costruisci()
-			elif sel > 0 and h != sel:
+			else:
 				dest = h
-				_costruisci()
-			elif h in lib:
-				sel = h
-				dest = -1
-				forza = eng.liberi(h, int(req["seat"]))
 				_costruisci()
 		"prosegui":
 			if h != int(req["da"]):
@@ -533,7 +535,7 @@ func _ui_mossa() -> void:
 	for h in req["libere"]:
 		b2.bersagli[h] = Color(UI.AMBRA, 0.6)
 	if sel < 0:
-		azione.add_child(_testo("Scegli sulla mappa un esagono con flotte che non si sono ancora spostate (evidenziati), poi la destinazione.", 14, UI.TENUE))
+		azione.add_child(_testo("Scegli sulla mappa un esagono con flotte che non si sono ancora spostate (evidenziati), poi la destinazione: anche un esagono con altre tue flotte. Un clic sulla forza scelta la deseleziona.", 14, UI.TENUE))
 	else:
 		sel = sel
 		var lib = eng.liberi(sel, s)
@@ -559,6 +561,10 @@ func _ui_mossa() -> void:
 			cb.toggled.connect(func(v): prendi_sag = v)
 			azione.add_child(cb)
 		_mete(s, sel, riserva)
+		azione.add_child(UI.bottone("Scegli un'altra forza", func():
+			sel = -1
+			dest = -1
+			_costruisci(), 14))
 		if dest > 0:
 			var err = eng.mossa_valida(s, sel, dest, forza, riserva)
 			var ri = eng.rischio(s, sel, dest, forza)

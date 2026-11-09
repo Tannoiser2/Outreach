@@ -46,8 +46,9 @@ func _init() -> void:
 		g._aggiorna_cursori()
 		await create_timer(0.5).timeout
 	if extra == "vicino":
-		g.b3.dist = 14.0
-		g.b3.pitch = 0.6
+		g.b3.dist = 9.0
+		g.b3.pitch = 0.55
+		g.b3.target = g.b3.pos(1215)
 		g.b3._camera()
 		await create_timer(0.5).timeout
 	if extra == "tocco":

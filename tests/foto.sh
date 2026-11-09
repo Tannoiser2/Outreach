@@ -14,5 +14,6 @@ f risultati/09_3d_senza_mappa.png 4 originale 3d 8 senzamappa
 f risultati/10_3d_vicino.png 4 originale 3d 8 vicino
 f risultati/11_fili_3d.png 4 reborn 3d 4 fili
 f risultati/12_tocco.png 4 originale 3d 3 tocco
+f risultati/13_modelli_3d.png 4 originale 3d 8 vicino
 for p in risultati/*.png; do convert "$p" -resize 1280x -quality 80 "${p%.png}.jpg" 2>/dev/null && rm "$p"; done
 ls -la risultati
