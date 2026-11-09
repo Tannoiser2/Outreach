@@ -4,3 +4,7 @@ build/
 godot
 *.zip
 *.tpz
+!assets/board/*.import
+!assets/reborn/sfondo_menu.jpg.import
+!assets/reborn/plancia.png.import
+!assets/misc/plancia.jpg.import
