@@ -1,0 +1,32 @@
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/core/engine.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/data/od_data.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/net/net.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/net/online_session.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/ui/board2d.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/ui/board3d.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/ui/game_view.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/ui/grafica.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/ui/main.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/ui/menu.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/ui/rules_view.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/ui/tabelle_view.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://scripts/ui/ui.gd.remap[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://.godot/global_script_class_cache.cfg[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://assets/misc/icona.png[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://assets/misc/caricamento.png[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://.godot/uid_cache.bin[39m[0m
+[  98% ] [90m[1msavepack[22m | Storing File: res://project.binary[39m[0m
+[92m[ DONE ][39m [1msavepack[22m
+[0m
+total 75204
+drwxr-xr-x 2 runner runner     4096 Nov 10 09:31 .
+drwxr-xr-x 3 runner runner     4096 Nov 10 09:31 ..
+-rw-r--r-- 1 runner runner     5496 Nov 10 09:31 index.apple-touch-icon.png
+-rw-r--r-- 1 runner runner     2973 Nov 10 09:31 index.audio.position.worklet.js
+-rw-r--r-- 1 runner runner     7298 Nov 10 09:31 index.audio.worklet.js
+-rw-r--r-- 1 runner runner     5441 Nov 10 09:31 index.html
+-rw-r--r-- 1 runner runner     6463 Nov 10 09:31 index.icon.png
+-rw-r--r-- 1 runner runner   279815 Nov 10 09:31 index.js
+-rw-r--r-- 1 runner runner 37162968 Nov 10 09:31 index.pck
+-rw-r--r-- 1 runner runner     6992 Nov 10 09:31 index.png
+-rw-r--r-- 1 runner runner 39509339 Nov 10 09:31 index.wasm
