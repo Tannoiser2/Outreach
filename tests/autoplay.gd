@@ -46,7 +46,7 @@ func _init() -> void:
 				var info := []
 				for i in e.players.size():
 					var t: Dictionary = e.totale_flotte(i)
-					info.append("%s: porte %d sp %d cl %d rp %d flotte %d/%d/%d%s" % [e.fazione(i), e.porte_di(i).size(), e.punti_sistema(i), e.cl(i), e.players[i]["rp"], t["r"], t["d"], t["e"], "" if e.players[i]["vivo"] else " ELIMINATO"])
+					info.append("%s: porte %d sp %d cl %d rp %d flotte %d/%d/%d sag %d%s" % [e.fazione(i), e.porte_di(i).size(), e.punti_sistema(i), e.cl(i), e.players[i]["rp"], t["r"], t["d"], t["e"], e.players[i]["sag"].size(), "" if e.players[i]["vivo"] else " ELIMINATO"])
 				var aut := 0
 				for a in e.aut:
 					if a["presente"]:

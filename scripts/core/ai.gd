@@ -77,6 +77,7 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 	var mete := {}
 	var minacce = _minacce(eng, s)
 	var p: Dictionary = eng.players[s]
+	var spedizione = _sceglie_spedizione(eng, s) if not riserva else -1
 	for h in eng.forze_libere(s):
 		var lib: Dictionary = eng.liberi(h, s)
 		var n: int = lib["r"] + lib["d"] + lib["e"]
@@ -91,27 +92,37 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 		if difesa > 0:
 			out.append({"da": h, "a": difesa, "r": lib["r"], "d": lib["d"], "e": lib["e"]})
 			continue
+		var st: Dictionary = eng.stack(h, s)
+		var porto_sag: bool = not st.is_empty() and not st["sag"].is_empty()
+		# 2. gettoni saggezza: chi ne trasporta uno torna a una porta propria a passi senza rischio;
+		# chi è in un esagono del centro lo prende uscendo
+		if (porto_sag or (eng.sag_centro.has(h) and _vuole_saggezza(eng, s))) and not riserva:
+			var casa = _porta_vicina_raggiungibile(eng, s, h)
+			if casa > 0:
+				var passo = _passo_verso(eng, s, h, lib, casa, false)
+				if passo > 0:
+					out.append({"da": h, "a": passo, "r": lib["r"], "d": lib["d"], "e": lib["e"], "sag": 1 if eng.sag_centro.has(h) else 0})
+				continue
+		# 3. la spedizione verso il centro del Nucleo
+		if h == spedizione and not riserva:
+			var meta_sag = _centro_con_gettone(eng, h)
+			if meta_sag > 0:
+				var passo2 = _passo_verso(eng, s, h, lib, meta_sag, false)
+				if passo2 > 0:
+					out.append({"da": h, "a": passo2, "r": lib["r"], "d": lib["d"], "e": lib["e"]})
+					_spedizione_h[s] = passo2
+					continue
 		if riserva:
 			continue
-		# 2. gettone saggezza nel centro: lo si prende e si torna alla porta più vicina
-		if eng.sag_centro.has(h) and eng.usa_saggezza_in_gioco():
-			var dest: int = eng._porta_vicina(h, eng.porte_di(s))
-			if dest > 0:
-				out.append({"da": h, "a": dest, "r": lib["r"], "d": lib["d"], "e": lib["e"], "sag": 1})
-				continue
-		var st: Dictionary = eng.stack(h, s)
-		if not st.is_empty() and not st["sag"].is_empty():
-			var dest2: int = eng._porta_vicina(h, eng.porte_di(s))
-			if dest2 > 0:
-				out.append({"da": h, "a": dest2, "r": lib["r"], "d": lib["d"], "e": lib["e"]})
-				continue
 		var tenere = {"r": 0, "d": 0, "e": 0}
-		# 3. chi sta su un esagono da esplorare resta (se ha esploratrici o è numeroso)
 		var pvn: int = eng.pv_noto(h, s)
 		var porta: Dictionary = eng.porta(h)
 		if porta.is_empty() and not D.nucleo(h):
 			if pvn < 0:
-				tenere = lib.duplicate()
+				# esagono da esplorare: restano le esploratrici e una flotta (non costano manutenzione)
+				tenere["e"] = int(lib["e"])
+				if int(lib["e"]) < 2:
+					tenere["r"] = mini(int(lib["r"]), 2 - int(lib["e"]))
 			elif pvn >= 2:
 				# si resta per costruire una porta (servono due flotte)
 				var serve := 2
@@ -120,7 +131,7 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 					tenere[k] += q
 					serve -= q
 		elif not porta.is_empty() and eng.porta_propria(h, s):
-			# porta propria: si resta per aumentarla fino al potenziale, tenendo le corazzate a difesa
+			# porta propria: si resta solo quanto serve per aumentarla fino al potenziale
 			var manca: int = eng.potenziale(h) - int(porta["sp"])
 			for k in ["r", "e"]:
 				var q2: int = mini(manca, int(lib[k]))
@@ -128,7 +139,9 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 				manca -= q2
 			if p["guardiani"]:
 				tenere = lib.duplicate()
-			tenere["d"] = mini(int(lib["d"]), maxi(int(tenere["d"]), 1 if eng.punti_sistema(s) > 0 else 0))
+			# una corazzata di guardia nelle porte più ricche
+			if int(porta["sp"]) >= 4:
+				tenere["d"] = mini(int(lib["d"]), maxi(int(tenere["d"]), 1))
 		var mov = {"r": int(lib["r"]) - int(tenere["r"]), "d": int(lib["d"]) - int(tenere["d"]), "e": int(lib["e"]) - int(tenere["e"])}
 		if mov["r"] + mov["d"] + mov["e"] <= 0:
 			continue
@@ -137,6 +150,138 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 			mete[meta] = true
 			out.append({"da": h, "a": meta, "r": mov["r"], "d": mov["d"], "e": mov["e"]})
 	return out
+
+
+# ---------------------------------------------------------------- saggezza: la spedizione al Nucleo
+
+var _spedizione_h := {}            # giocatore -> esagono della forza in spedizione
+const CENTRO := [3815, 3915, 3916]
+
+
+func _vuole_saggezza(eng, s: int) -> bool:
+	if not eng.usa_saggezza_in_gioco():
+		return false
+	var p: Dictionary = eng.players[s]
+	if p["guardiani"]:
+		return false
+	var trasportati := 0
+	for h in eng.flotte:
+		var st: Dictionary = eng.stack(h, s)
+		if not st.is_empty():
+			trasportati += st["sag"].size()
+	var limite := 3
+	# nello scenario 3 la X fa perdere: basta un gettone per sperare in L1
+	if eng.sc.get("x_perde", false):
+		limite = 1 if int(eng.cl(s)) < 2 else 0
+	return p["sag"].size() + trasportati < limite
+
+
+func _centro_con_gettone(eng, h: int) -> int:
+	var best := -1
+	var bd := 999
+	for c in CENTRO:
+		if eng.sag_centro.has(c):
+			var d = D.distanza(h, c)
+			if d < bd:
+				bd = d
+				best = c
+	return best
+
+
+## Sceglie (o ritrova) la forza che va a prendere un gettone saggezza al centro del Nucleo.
+func _sceglie_spedizione(eng, s: int) -> int:
+	if not _vuole_saggezza(eng, s) or eng.sag_centro.is_empty() or eng.turn < 3:
+		_spedizione_h.erase(s)
+		return -1
+	var h0 := int(_spedizione_h.get(s, -1))
+	if h0 > 0 and eng.n_flotte(h0, s) > 0 and _n_lib(eng, h0, s) > 0:
+		return h0
+	# una nuova: la forza libera più vicina al centro, meglio se di sole esploratrici
+	var best := -1
+	var bv = 1e9
+	for h in eng.forze_libere(s):
+		var lib: Dictionary = eng.liberi(h, s)
+		if int(lib["r"]) + int(lib["d"]) + int(lib["e"]) <= 0:
+			continue
+		if eng.porta_propria(h, s) and eng.potenziale(h) > int(eng.porte[h]["sp"]):
+			continue
+		var d = D.distanza(h, 3915)
+		var v := float(d)
+		if int(lib["e"]) > 0 and int(lib["r"]) + int(lib["d"]) == 0:
+			v -= 6.0
+		if eng.porta_propria(h, s):
+			v -= 2.0
+		if v < bv:
+			bv = v
+			best = h
+	if best > 0:
+		_spedizione_h[s] = best
+	return best
+
+
+func _n_lib(eng, h: int, s: int) -> int:
+	var l: Dictionary = eng.liberi(h, s)
+	return int(l["r"]) + int(l["d"]) + int(l["e"])
+
+
+func _porta_vicina_raggiungibile(eng, s: int, h: int) -> int:
+	var best := -1
+	var bd := 999
+	for g in eng.porte_di(s):
+		var d = D.distanza(h, g)
+		if d < bd:
+			bd = d
+			best = g
+	return best
+
+
+## Il passo migliore verso la meta: il salto più lungo senza alcun rischio di dispersione che
+## avvicina; fuori dal Nucleo, se nessun salto è sicuro, accetta un rischio di 1 su 6.
+func _passo_verso(eng, s: int, h: int, fl: Dictionary, meta: int, riserva: bool) -> int:
+	var d0 = D.distanza(h, meta)
+	if d0 == 0:
+		return -1
+	var raggio: int = maxi(1, eng.clr(s))
+	var portata = raggio
+	if eng.porta_utile(h, s):
+		portata = maxi(raggio, 10)
+	portata = mini(portata, d0)
+	var best := -1
+	var bv = 1e9
+	for tollera in [0, 1]:
+		var c0 = D.col(h)
+		var r0 = D.row(h)
+		for c in range(c0 - portata, c0 + portata + 1):
+			for r in range(r0 - portata, r0 + portata + 1):
+				var x = D.hx(c, r)
+				if x == h or not D.esiste(x):
+					continue
+				var dist = D.distanza(h, x)
+				if dist > portata:
+					continue
+				var dm = D.distanza(x, meta)
+				if dm >= d0:
+					continue
+				if eng.mossa_valida(s, h, x, fl, riserva) != "":
+					continue
+				var ri: Dictionary = eng.rischio(s, h, x, fl)
+				var k := int(ri["rischio"])
+				if k > tollera:
+					continue
+				if k > 0 and (D.nucleo(h) or D.nucleo(x) or ri["oltre"]):
+					continue
+				var v = float(dm) + k * 3.0
+				for o in eng.proprietari(x):
+					if o != s and (o >= 10 or eng.opzione(o, s) == "C"):
+						v += 6.0
+				if eng.porta_utile(x, s):
+					v -= 1.5
+				if v < bv:
+					bv = v
+					best = x
+		if best > 0:
+			return best
+	return -1
 
 
 static var _bordo_nucleo: Array = []
@@ -211,7 +356,8 @@ func _meta(eng, s: int, h: int, fl: Dictionary, raggio: int, mete: Dictionary) -
 			var nota: int = eng.pv_noto(x, s)
 			if not g.is_empty():
 				if eng.porta_propria(x, s):
-					v += 0.5 if int(g["sp"]) < eng.potenziale(x) else -2.0
+					var margine_x: int = eng.potenziale(x) - int(g["sp"]) - eng.n_flotte(x, s)
+					v += minf(4.5, margine_x * 1.5) if margine_x > 0 else -2.0
 				elif g["neut"]:
 					v += 3.0 if eng.n_flotte(x, s) == 0 else 0.0
 				else:
@@ -219,7 +365,7 @@ func _meta(eng, s: int, h: int, fl: Dictionary, raggio: int, mete: Dictionary) -
 			elif not p["esplorati"].has(x) or nota < 0:
 				v += {"A": 4.0, "F": 3.0, "I": 1.5}.get(t, 0.0)
 			elif nota >= 2:
-				v += 1.0 + nota * 0.6
+				v += 1.0 + nota * 0.9 - (1.5 if eng.n_flotte(x, s) >= 2 else 0.0)
 			else:
 				v -= 1.0
 			# vicino alle proprie porte è meglio
@@ -439,7 +585,7 @@ func _risorse(eng, s: int, rp: int) -> Array:
 	for h in eng.flotte:
 		if eng.n_flotte(h, s) >= 2 and not eng.porte.has(h):
 			var v: int = eng.pv_noto(h, s)
-			if v >= 1:
+			if v >= 2 or (v == 1 and eng.n_flotte(h, s) >= 4):
 				cand.append([v, h])
 	cand.sort_custom(func(a, b): return a[0] > b[0])
 	for c in cand:
@@ -454,44 +600,90 @@ func _risorse(eng, s: int, rp: int) -> Array:
 		if manca <= 0:
 			continue
 		var disp: int = eng.n_flotte(h, s) - int(stato["usate"].get(h, 0))
-		var tieni = 1 if eng.punti_sistema(s) > 6 else 0
+		var tieni = 1 if (int(eng.porte[h]["sp"]) >= 4 and _vicini_ostili(eng, s, h)) else 0
 		var n := mini(manca, disp - tieni)
 		if n > 0:
 			prova.call({"t": "aumenta", "h": h, "n": n})
-	# 4. costruire flotte: prima regolari dove la porta ha ancora margine (le si spende il turno dopo
-	# per aumentarla: è il modo più rapido di far crescere i punti sistema), poi esploratrici,
-	# corazzate se c'è una minaccia, regolari per espandersi.
-	var riserva = 4 if not eng.opz.get("gilham", false) else 0
+	# 4. costruire flotte. Il motore della crescita: una regolare costa 3 risorse e, spesa per
+	# aumentare una porta, dà un punto sistema per sempre. Si costruisce dove la porta ha ancora
+	# margine; altrove solo se c'è un posto vicino dove servono (porte da aumentare, esagoni buoni
+	# da colonizzare); esploratrici per esplorare (non costano manutenzione); corazzate se serve.
+	var riserva = 2 if not eng.opz.get("gilham", false) else 0
+	if eng.turn >= 2 and _vuole_saggezza(eng, s):
+		riserva = 0
 	var tot: Dictionary = eng.totale_flotte(s)
 	var minacciato = not _minacce(eng, s).is_empty()
+	var richiesta = _posti_da_riempire(eng, s)
 	var porte_ok: Array = eng.porte_di(s).filter(func(h): return int(eng.porte[h]["sp"]) > 0)
 	porte_ok.sort_custom(func(a, b): return eng.potenziale(a) - int(eng.porte[a]["sp"]) > eng.potenziale(b) - int(eng.porte[b]["sp"]))
 	var giri := 0
+	var esploratrici_volute = 2 + eng.punti_sistema(s) / 10
+	if _vuole_saggezza(eng, s):
+		esploratrici_volute += 2
 	while int(stato["rp"]) > riserva and giri < 40:
 		giri += 1
 		var fatto := false
 		for h in porte_ok:
 			if int(stato["rp"]) <= riserva:
 				break
-			var margine: int = eng.potenziale(h) - int(eng.porte[h]["sp"]) - eng.n_flotte(h, s)
+			var margine: int = eng.potenziale(h) - int(eng.porte[h]["sp"]) - eng.n_flotte(h, s) - int(stato["costruite"].get(h, 0))
 			var t = D.terreno(h)
-			var tipi = ["r"]
-			if margine <= 0:
-				if t == "A" and int(tot["e"]) < 2 + eng.punti_sistema(s) / 12 and not p["guardiani"]:
-					tipi = ["e", "r"]
-				elif (t == "A" or t == "F") and (minacciato or p["guardiani"] or (int(tot["d"]) * 4 < int(tot["r"]) and int(stato["rp"]) >= 16)):
-					tipi = ["d", "r"]
+			var tipi = []
+			if margine > 0:
+				tipi = ["r"]
+			elif t == "A" and int(tot["e"]) < esploratrici_volute and not p["guardiani"]:
+				tipi = ["e", "r"]
+			elif (t == "A" or t == "F") and (minacciato or p["guardiani"] or (int(tot["d"]) * 5 < int(tot["r"]) and eng.punti_sistema(s) >= 20 and int(stato["rp"]) >= 12)):
+				tipi = ["d", "r"]
+			elif richiesta > 0:
+				tipi = ["r"]
+			if tipi.is_empty():
+				continue
 			for tipo in tipi:
 				var a = {"t": "flotta", "h": h, "k": tipo, "n": 1}
 				if prova.call(a):
 					fatto = true
 					tot[tipo] += 1
+					if margine <= 0 and tipo == "r":
+						richiesta -= 1
 					break
 		if not fatto:
 			break
 	if eng.opz.get("gilham", false) and int(stato["rp"]) > 20:
 		prova.call({"t": "ricerca", "rp": int(stato["rp"]) - 15})
 	return out
+
+
+func _vicini_ostili(eng, s: int, g: int) -> bool:
+	for h in eng.flotte:
+		if D.distanza(h, g) > 3:
+			continue
+		for o in eng.proprietari(h):
+			if o != s and (o >= 10 or eng.opzione(o, s) != "A"):
+				return true
+	return false
+
+
+## Quante flotte servono vicino alle porte: punti mancanti delle porte proprie (oltre le flotte
+## già presenti) più due per ogni esagono esplorato buono ancora senza porta.
+func _posti_da_riempire(eng, s: int) -> int:
+	var n := 0
+	for g in eng.porte_di(s):
+		n += maxi(0, eng.potenziale(g) - int(eng.porte[g]["sp"]) - eng.n_flotte(g, s))
+	for h in eng.players[s]["esplorati"]:
+		if eng.porte.has(h) or D.nucleo(h):
+			continue
+		if eng.pv_noto(h, s) >= 2:
+			n += maxi(0, 2 - eng.n_flotte(h, s))
+	# flotte libere in giro non impegnate
+	var sciolte := 0
+	for h in eng.flotte:
+		if eng.porta_propria(h, s):
+			continue
+		if eng.pv_noto(h, s) < 0:
+			continue
+		sciolte += int(eng.stack(h, s).get("r", 0))
+	return n - sciolte
 
 
 func _schieramento(eng, s: int, budget: int) -> Array:
