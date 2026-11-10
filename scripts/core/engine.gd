@@ -2376,6 +2376,12 @@ func _applica_risorse(s: int, azioni: Array) -> void:
 				_spendi_flotte(h, s, 2)
 				porte[h] = {"o": s, "sp": 0, "neut": false, "nata": turn, "aum": 0, "orig": s}
 				fatte.append("porta in %s" % D.nome(h))
+				# 17.21: un gettone saggezza trasportato da una forza su cui nasce una porta amica passa sotto controllo
+				var stg := stack(h, s)
+				if not stg.is_empty() and not stg["sag"].is_empty():
+					var carico: Array = stg["sag"].duplicate()
+					stg["sag"].clear()
+					_atterra(s, h, {"r": 0, "d": 0, "e": 0}, carico)
 				fx.emit("porta", {"h": h, "o": s})
 			"aumenta":
 				var n := int(a.get("n", 1))

@@ -78,6 +78,10 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 	var minacce = _minacce(eng, s)
 	var p: Dictionary = eng.players[s]
 	var spedizione = _sceglie_spedizione(eng, s) if not riserva else -1
+	_verso_chiave.clear()
+	for c in [1816, 814, 1118, 1212, 1215, 1314]:
+		if _chiave(eng, c):
+			_verso_chiave[c] = eng.n_flotte(c, s)
 	for h in eng.forze_libere(s):
 		var lib: Dictionary = eng.liberi(h, s)
 		var n: int = lib["r"] + lib["d"] + lib["e"]
@@ -114,9 +118,25 @@ func _pianifica(eng, s: int, riserva: bool) -> Array:
 					continue
 		if riserva:
 			continue
+		# obiettivo dello scenario ancora senza porta propria: ci vanno, a passi sicuri, esploratrici
+		# e corazzate (e regolari finché il gruppo è piccolo)
+		var ch = _chiave_vicina(eng, s, h)
+		if ch > 0 and int(_verso_chiave.get(ch, 0)) < 6:
+			var mc = {"r": 0, "d": int(lib["d"]), "e": int(lib["e"])}
+			if int(_verso_chiave.get(ch, 0)) + mc["d"] + mc["e"] < 3:
+				mc["r"] = int(lib["r"])
+			if mc["r"] + mc["d"] + mc["e"] > 0:
+				var passo3 = _passo_verso(eng, s, h, mc, ch, false)
+				if passo3 > 0:
+					_verso_chiave[ch] = int(_verso_chiave.get(ch, 0)) + mc["r"] + mc["d"] + mc["e"]
+					out.append({"da": h, "a": passo3, "r": mc["r"], "d": mc["d"], "e": mc["e"]})
+					continue
 		var tenere = {"r": 0, "d": 0, "e": 0}
 		var pvn: int = eng.pv_noto(h, s)
 		var porta: Dictionary = eng.porta(h)
+		if _chiave(eng, h) and porta.is_empty():
+			# esagono chiave dello scenario: si resta tutti a esplorarlo e a costruirci la porta
+			continue
 		if porta.is_empty() and not D.nucleo(h):
 			if pvn < 0:
 				# esagono da esplorare: restano le esploratrici e una flotta (non costano manutenzione)
@@ -290,8 +310,10 @@ static var _bordo_nucleo: Array = []
 func _obiettivo(eng, s: int, x: int) -> float:
 	match int(eng.scn_id):
 		1:
-			if x == 1816:
-				return 7.0
+			if x == 1816 and not eng.porta_propria(x, s):
+				return 4.0
+			if x in eng.players[s]["porte_iniziali"] and eng.n_flotte(x, s) == 0:
+				return 1.5
 			var altro: int = 1 - s
 			if x in eng.players[altro]["porte_iniziali"] and int(eng.totale_flotte(s)["d"]) >= 3:
 				return 3.0
@@ -312,6 +334,36 @@ func _obiettivo(eng, s: int, x: int) -> float:
 			if x in [814, 1118, 1212, 1215, 1314] and not eng.porta_propria(x, s):
 				return 4.0
 	return 0.0
+
+
+var _verso_chiave := {}
+
+
+func _chiave_vicina(eng, s: int, h: int) -> int:
+	var best := -1
+	var bd := 9
+	for c in _verso_chiave:
+		if eng.porta_propria(c, s) or h == c:
+			continue
+		var g: Dictionary = eng.porta(c)
+		if not g.is_empty() and not g["neut"]:
+			# porta altrui: se ne occupa la logica d'attacco, non la corsa all'obiettivo
+			continue
+		var d = D.distanza(h, c)
+		if d < bd:
+			bd = d
+			best = c
+	return best
+
+
+## Esagoni in cui lo scenario chiede di avere una porta.
+func _chiave(eng, h: int) -> bool:
+	match int(eng.scn_id):
+		1:
+			return h == 1816
+		4:
+			return h in [814, 1118, 1212, 1215, 1314]
+	return false
 
 
 func _minacce(eng, s: int) -> Array:
@@ -361,9 +413,21 @@ func _meta(eng, s: int, h: int, fl: Dictionary, raggio: int, mete: Dictionary) -
 				elif g["neut"]:
 					v += 3.0 if eng.n_flotte(x, s) == 0 else 0.0
 				else:
-					v -= 4.0
+					# porta altrui: un gruppo di corazzate abbastanza forte la va ad attaccare
+					var o_g := int(g["o"])
+					var amico: bool = eng.alleati(s, o_g) or (o_g < 10 and eng.opzione(s, o_g) == "A")
+					var difesa_stimata := 0
+					for o2 in eng.proprietari(x):
+						if o2 != s:
+							difesa_stimata += 4
+					if not amico and int(fl["d"]) >= 3 and int(fl["d"]) * 2 + int(fl["r"]) >= difesa_stimata * 1.5 + 2 and eng.turn >= 6:
+						v += 3.0 + int(g["sp"]) * 0.0 + float(int(fl["d"])) * 0.3
+					else:
+						v -= 4.0
 			elif not p["esplorati"].has(x) or nota < 0:
 				v += {"A": 4.0, "F": 3.0, "I": 1.5}.get(t, 0.0)
+				if eng.n_flotte(x, s) > 0 and eng.n_flotte(x, s) < 4:
+					v += 1.5
 			elif nota >= 2:
 				v += 1.0 + nota * 0.9 - (1.5 if eng.n_flotte(x, s) >= 2 else 0.0)
 			else:
@@ -375,7 +439,7 @@ func _meta(eng, s: int, h: int, fl: Dictionary, raggio: int, mete: Dictionary) -
 			v -= maxf(0.0, vicina - 2) * 0.7
 			v -= dist * 0.4
 			v -= int(ri["rischio"]) * 1.5
-			if mete.has(x):
+			if mete.has(x) and nota >= 0:
 				v -= 3.0
 			v += _obiettivo(eng, s, x)
 			# nemici: evitare le pile ostili più forti
@@ -491,27 +555,36 @@ func _valore_lettera(eng, s: int, r: String, sag: int, sp: int) -> float:
 		return 0.0
 	var p: Dictionary = eng.players[s]
 	var l = r.substr(0, 1)
+	# un livello di civiltà vale molto: raddoppia la costruzione per esagono, allarga il raggio,
+	# riduce la dispersione; nello scenario 3 è la vittoria
+	var livello = 40.0 + sp * 1.2
+	if int(eng.scn_id) == 3 and int(eng.cl(s)) < 2:
+		livello *= 4.0
 	if l in ["A", "B", "C", "D", "E", "F"]:
 		if eng.ignora("fato_AF", s) or eng.ignora("dissoluzione", s) or p["immune"] or p["diss"].has(l):
 			return 0.0
-		var v: float = -float(D.DISSOLUZIONE[l]) / 100.0 * sp * 2.5
+		var v: float = -float(D.DISSOLUZIONE[l]) / 100.0 * sp * 1.6
 		if l in ["E", "F"]:
-			v -= 40.0
+			v -= livello
 		if l == "B":
-			v += 10.0
+			# dopo la B tutte le dissoluzioni successive si ignorano: per una civiltà grande è un affare
+			var restano := 40
+			if int(eng.sc["turni"]) > 0:
+				restano = maxi(0, int(eng.sc["turni"]) - int(eng.turn))
+			v += 20.0 + sp * 1.0 + restano * 6.0
 		return v
 	if l in ["G", "H", "I", "J"]:
 		return -3.0
 	if l == "K":
 		if sag >= 2 and not p["k_usato"] and not eng.ignora("fato_KL", s):
-			return 120.0
+			return livello * 2.0
 		return 0.0
 	if l == "L":
 		if eng.ignora("fato_KL", s):
 			return 0.0
 		if r == "L1" and sag < 1:
 			return 0.0
-		return 70.0
+		return livello
 	return 0.0
 
 
@@ -585,7 +658,10 @@ func _risorse(eng, s: int, rp: int) -> Array:
 	for h in eng.flotte:
 		if eng.n_flotte(h, s) >= 2 and not eng.porte.has(h):
 			var v: int = eng.pv_noto(h, s)
-			if v >= 2 or (v == 1 and eng.n_flotte(h, s) >= 4):
+			var st_s: Dictionary = eng.stack(h, s)
+			if _chiave(eng, h) and v >= 0:
+				v = 99
+			if v >= 2 or (v == 1 and eng.n_flotte(h, s) >= 4) or (v >= 0 and not st_s["sag"].is_empty()):
 				cand.append([v, h])
 	cand.sort_custom(func(a, b): return a[0] > b[0])
 	for c in cand:
@@ -608,9 +684,7 @@ func _risorse(eng, s: int, rp: int) -> Array:
 	# aumentare una porta, dà un punto sistema per sempre. Si costruisce dove la porta ha ancora
 	# margine; altrove solo se c'è un posto vicino dove servono (porte da aumentare, esagoni buoni
 	# da colonizzare); esploratrici per esplorare (non costano manutenzione); corazzate se serve.
-	var riserva = 2 if not eng.opz.get("gilham", false) else 0
-	if eng.turn >= 2 and _vuole_saggezza(eng, s):
-		riserva = 0
+	var riserva: int = _riserva_fato(eng, s)
 	var tot: Dictionary = eng.totale_flotte(s)
 	var minacciato = not _minacce(eng, s).is_empty()
 	var richiesta = _posti_da_riempire(eng, s)
@@ -649,9 +723,58 @@ func _risorse(eng, s: int, rp: int) -> Array:
 					break
 		if not fatto:
 			break
+	# 5. risorse in eccesso: esploratrici (esplorano e non costano manutenzione), poi corazzate
+	var extra_giri := 0
+	while int(stato["rp"]) > riserva + 12 and extra_giri < 30:
+		extra_giri += 1
+		var fatto2 := false
+		for h in porte_ok:
+			if int(stato["rp"]) <= riserva + 12:
+				break
+			var t2 = D.terreno(h)
+			var tipo2 := ""
+			if t2 == "A" and int(tot["e"]) < esploratrici_volute + 4:
+				tipo2 = "e"
+			elif t2 == "A" or t2 == "F":
+				tipo2 = "d"
+			if tipo2 == "":
+				continue
+			if prova.call({"t": "flotta", "h": h, "k": tipo2, "n": 1}):
+				tot[tipo2] += 1
+				fatto2 = true
+		if not fatto2:
+			break
 	if eng.opz.get("gilham", false) and int(stato["rp"]) > 20:
 		prova.call({"t": "ricerca", "rp": int(stato["rp"]) - 15})
 	return out
+
+
+## Risorse da tenere per il prossimo Fato: quanto serve per spostarsi a sinistra fino a una
+## colonna senza dissoluzioni dannose (5 risorse a colonna), con i punti sistema del prossimo turno.
+func _riserva_fato(eng, s: int) -> int:
+	var p: Dictionary = eng.players[s]
+	var tab: Array = eng.tabella_fato()
+	var sp: int = eng.punti_sistema(s) + maxi(2, eng.punti_sistema(s) / 6)
+	var gil: bool = eng.opz.get("gilham", false)
+	var c0: int = D.col_fato_gilham(sp) if gil else D.col_fato(sp)
+	var c = c0
+	while c > 0:
+		var male := false
+		for r in range(0, mini(6, tab.size())):
+			var l: String = str(tab[r][c]).substr(0, 1)
+			if l in ["A", "B", "C", "D", "E", "F"] and not p["immune"] and not p["diss"].has(l) and not eng.ignora("fato_AF", s) and not eng.ignora("dissoluzione", s):
+				male = true
+		if not male:
+			break
+		c -= 1
+	if c == c0:
+		# colonna già sicura (Fede, o dissoluzioni già subite): se in fondo c'è un aumento di
+		# civiltà, si tengono le risorse per aggiungere 1 o 2 al dado
+		for r in range(5, mini(8, tab.size())):
+			var l2: String = str(tab[r][c0]).substr(0, 1)
+			if l2 in ["L", "K"] and not eng.ignora("fato_KL", s) and not (l2 == "K" and (eng.ignora("fato_K", s) or p["k_usato"])):
+				return 100 if r >= 6 else 50
+	return mini(60, 5 * (c0 - c) + 2)
 
 
 func _vicini_ostili(eng, s: int, g: int) -> bool:
